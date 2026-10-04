@@ -1,8 +1,11 @@
 # Proposed migrations (not applied)
 
 Files here are **awaiting approval** and are deliberately outside `supabase/migrations/`, so
-`supabase db push` will not apply them. `npm run db:verify` still tests them on a throwaway local database.
+`supabase db push` will not apply them.
 
-- `20261004000200_m2_authoring.sql`: guest attempts, catalogue fields on published versions, a stricter publish guard,
-  draft fields, an audit log and preview sessions. It will be split into a "foundation" migration and a
-  "builder" migration before being moved into `supabase/migrations/`.
+- `20261004000300_m2_authoring.sql`: Case Builder support (draft fields and saving incomplete drafts, audit log,
+  preview sessions). Moves to `supabase/migrations/` when the Case Builder is approved.
+- `20261004000300_m2_authoring.down.sql`: its local rollback.
+- `rls_authoring.test.sql`: its security tests.
+
+Test everything, including these, with `npm run db:verify:proposed`.

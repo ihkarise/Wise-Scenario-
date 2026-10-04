@@ -1,4 +1,5 @@
--- Row Level Security and integrity tests for the Milestone 1 + 2 schema.
+-- Row Level Security and integrity tests for the approved schema (Milestone 1 + Milestone 2 foundation).
+-- Case Builder rules (audit log, previews, drafts) are tested in supabase/proposed/rls_authoring.test.sql.
 -- Run with: npm run db:verify   (needs local PostgreSQL binaries; see docs/DATABASE.md)
 \set ON_ERROR_STOP on
 \set QUIET on
@@ -34,10 +35,7 @@ insert into public.attempts (id, user_id, case_id, case_version, status, lives_r
   ('a7000000-0000-4000-8000-00000000000b', 'b0000000-0000-4000-8000-00000000000b', 'c0000000-0000-4000-8000-000000000001', 1, 'IN_PROGRESS', 5, now());
 insert into public.attempts (id, guest_id, case_id, case_version, status, lives_remaining, started_at) values
   ('a7000000-0000-4000-8000-00000000000c', '9e000000-0000-4000-8000-00000000009e', 'c0000000-0000-4000-8000-000000000001', 1, 'IN_PROGRESS', 5, now());
-insert into public.preview_sessions (owner_id, case_id, snapshot, attempt) values
-  ('e0000000-0000-4000-8000-00000000000e', 'c0000000-0000-4000-8000-000000000002', '{"secret":"draft"}', '{}');
-insert into public.audit_logs (actor_id, action, entity_type, entity_id, summary)
-  values ('5a000000-0000-4000-8000-00000000005a', 'case.published', 'case', 'c0000000-0000-4000-8000-000000000001', 'Published case');
+
 insert into public.attempt_answers (attempt_id, sequence, submission_id, stage_id, stage_position, option_id, is_correct, lives_before, lives_after)
 values ('a7000000-0000-4000-8000-00000000000a', 1, 'd0000000-0000-4000-8000-000000000001', '50000000-0000-4000-8000-000000000001', 1,
         gen_random_uuid(), false, 5, 4);
@@ -79,13 +77,7 @@ do $$ begin
   if (select count(*) from public.attempts) <> 1 then raise exception 'FAIL: learner should see exactly their own attempt'; end if;
   if exists (select 1 from public.attempts where user_id is distinct from auth.uid()) then raise exception 'FAIL: learner sees another attempt'; end if;
   if (select count(*) from public.attempt_answers) <> 1 then raise exception 'FAIL: learner should see only own answers'; end if;
-  if (select count(*) from public.audit_logs) <> 0 then raise exception 'FAIL: learner reads the audit log'; end if;
-  if (select count(*) from public.preview_sessions) <> 0 then raise exception 'FAIL: learner reads preview sessions'; end if;
 end $$;
-do $$ begin
-  insert into public.audit_logs (actor_id, action, entity_type, summary) values (auth.uid(), 'case.published', 'case', 'fake');
-  raise exception 'FAIL: learner wrote to the audit log';
-exception when insufficient_privilege then null; end $$;
 do $$ begin
   insert into public.case_versions (case_id, version, snapshot, published_by, case_number, slug, title, domain, difficulty, max_lives, stage_count)
   values ('c0000000-0000-4000-8000-000000000002', 1, '{}', auth.uid(), 2, 'draft-case', 'Draft case', 'Dermatology', 'EASY', 3, 1);
@@ -110,7 +102,7 @@ do $$ begin
   if found then raise exception 'FAIL: learner updated a case'; end if;
 end $$;
 rollback;
-\echo 'PASS learner: own attempts only; no content, audit log or previews; cannot alter lives/score, insert answers, publish or self-promote'
+\echo 'PASS learner: own attempts only; no content; cannot alter lives/score, insert answers, publish or self-promote'
 
 -- ----- editor -----
 begin;
@@ -121,22 +113,7 @@ do $$ begin
   update public.cases set title = 'Draft case (edited)' where slug = 'draft-case';
   if not found then raise exception 'FAIL: editor cannot edit a draft'; end if;
   if (select count(*) from public.attempts) <> 0 then raise exception 'FAIL: editor reads learner attempts'; end if;
-  if (select count(*) from public.preview_sessions) <> 1 then raise exception 'FAIL: editor should see own preview session'; end if;
-  insert into public.audit_logs (actor_id, action, entity_type, summary) values (auth.uid(), 'case.updated', 'case', 'Edited draft');
-  -- Incomplete drafts can be saved; completeness is checked when previewing and publishing.
-  insert into public.case_stages (case_id, position, title, content, question)
-  values ('c0000000-0000-4000-8000-000000000002', 1, '', '', '');
 end $$;
-do $$ begin
-  update public.audit_logs set summary = 'rewritten'; if found then raise exception 'FAIL: editor rewrote the audit log'; end if;
-exception when insufficient_privilege then null; end $$;
-do $$ begin
-  delete from public.audit_logs; if found then raise exception 'FAIL: editor deleted audit history'; end if;
-exception when insufficient_privilege then null; end $$;
-do $$ begin
-  insert into public.audit_logs (actor_id, action, entity_type, summary) values ('5a000000-0000-4000-8000-00000000005a', 'case.published', 'case', 'forged');
-  raise exception 'FAIL: editor wrote an audit entry in someone else''s name';
-exception when insufficient_privilege then null; end $$;
 do $$ begin
   insert into public.case_versions (case_id, version, snapshot, published_by, case_number, slug, title, domain, difficulty, max_lives, stage_count)
   values ('c0000000-0000-4000-8000-000000000002', 1, '{}', auth.uid(), 2, 'draft-case', 'Draft case', 'Dermatology', 'EASY', 3, 1);
@@ -151,7 +128,7 @@ do $$ begin
   raise exception 'FAIL: editor repointed the live version';
 exception when insufficient_privilege then null; end $$;
 do $$ begin
-  update public.cases set title = 'Edited working copy', has_unpublished_changes = true where slug = 'published-case';
+  update public.cases set title = 'Edited working copy' where slug = 'published-case';
   if not found then raise exception 'FAIL: editor cannot edit the working copy of a published case'; end if;
 end $$;
 do $$ begin
@@ -159,7 +136,7 @@ do $$ begin
   raise exception 'FAIL: editor published a case';
 exception when insufficient_privilege then null; end $$;
 rollback;
-\echo 'PASS editor: reads/edits drafts, saves incomplete drafts, logs own actions; cannot publish, unpublish, repoint versions, forge or rewrite audit, or see attempts'
+\echo 'PASS editor: reads/edits drafts; cannot publish, unpublish, repoint versions or see attempts'
 
 -- ----- super admin -----
 begin;
@@ -170,10 +147,9 @@ do $$ begin
   select id, 1, '{}', auth.uid(), case_number, slug, title, 'Dermatology', difficulty, max_lives, 1 from public.cases where slug = 'draft-case';
   update public.cases set status = 'PUBLISHED', published_version = 1, published_at = now() where slug = 'draft-case';
   if not found then raise exception 'FAIL: super admin could not publish'; end if;
-  if (select count(*) from public.preview_sessions) <> 0 then raise exception 'FAIL: preview sessions visible to another staff member'; end if;
 end $$;
 rollback;
-\echo 'PASS super admin: can create a version and publish; cannot see other staff previews'
+\echo 'PASS super admin: can create a version and publish'
 
 -- ----- integrity -----
 begin;
@@ -192,9 +168,7 @@ do $$ begin
   values ('a0000000-0000-4000-8000-00000000000a', gen_random_uuid(), 'c0000000-0000-4000-8000-000000000001', 1, 'NOT_STARTED', 5);
   raise exception 'FAIL: attempt with two owners';
 exception when check_violation then null; end $$;
-do $$ begin
-  update public.cases set max_lives = 11 where slug = 'draft-case'; raise exception 'FAIL: more than 10 lives allowed';
-exception when check_violation then null; end $$;
+
 do $$ begin
   insert into public.attempt_answers (attempt_id, sequence, submission_id, stage_id, stage_position, option_id, is_correct, lives_before, lives_after)
   values ('a7000000-0000-4000-8000-00000000000a', 2, 'd0000000-0000-4000-8000-000000000001', gen_random_uuid(), 2, gen_random_uuid(), false, 4, 3);
@@ -213,5 +187,5 @@ do $$ begin
   raise exception 'FAIL: completed attempt without completion time and reason';
 exception when check_violation then null; end $$;
 rollback;
-\echo 'PASS integrity: one active attempt per user/guest, single owner, idempotent answers, version pinning, 1-10 lives'
-\echo 'ALL DATABASE TESTS PASSED'
+\echo 'PASS integrity: one active attempt per user/guest, single owner, idempotent answers, version pinning'
+\echo 'ALL FOUNDATION DATABASE TESTS PASSED'
