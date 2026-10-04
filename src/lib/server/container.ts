@@ -16,6 +16,8 @@ import { PostgresAttemptRepository } from "@/features/attempts/postgres-attempt-
 import { AttemptService } from "@/features/attempts/attempt-service";
 import { AdminCaseService } from "@/features/admin/admin-case-service";
 import { PostgresAdminRepository } from "@/features/admin/postgres-admin-repository";
+import { parseConditionSeeds } from "@/features/case-manager/conditions";
+import conditionList from "../../../data/conditions.json";
 
 /** Server-side wiring. The only place that chooses concrete implementations. */
 export type Container = {
@@ -41,7 +43,7 @@ export function createPostgresContainer(options: Common & { sql: Sql; sessionSec
     attempts,
     attemptService: new AttemptService({ cases, attempts, clock, newId }),
     identity: new IdentityResolver(options.auth ?? noAuthGateway, options.roles ?? new PostgresRoleSource(options.sql), options.sessionSecret),
-    admin: new AdminCaseService({ repo: new PostgresAdminRepository(options.sql), newId, clock }),
+    admin: new AdminCaseService({ repo: new PostgresAdminRepository(options.sql), newId, clock, conditionSeeds: parseConditionSeeds(conditionList) }),
   };
 }
 

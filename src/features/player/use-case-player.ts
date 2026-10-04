@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { PlayerView } from "@/lib/engine/view";
 import { uuidv4 } from "@/lib/utils/uuid";
-import { playerApi, type ApiErrorCode } from "./api-client";
+import { playerApi, type ApiErrorCode, type PlayerApi } from "./api-client";
 
 type Busy = "starting" | "submitting" | null;
 type PlayerError = { code: ApiErrorCode; message: string } | null;
@@ -19,7 +19,7 @@ const RESYNC: ApiErrorCode[] = ["STALE_STATE", "INVALID_STAGE", "ATTEMPT_COMPLET
  * Layer 2 (server): every answer carries an idempotency key and the revision the learner saw.
  * A network retry of the SAME answer reuses the same key, so it can never cost a second life.
  */
-export function useCasePlayer(caseSlug: string, initialView: PlayerView | null) {
+export function useCasePlayer(caseSlug: string, initialView: PlayerView | null, api: PlayerApi = playerApi) {
   const [view, setView] = useState<PlayerView | null>(initialView);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
@@ -32,7 +32,7 @@ export function useCasePlayer(caseSlug: string, initialView: PlayerView | null) 
     lock.current = true;
     setBusy("starting");
     setError(null);
-    const res = await playerApi.start(caseSlug);
+    const res = await api.start(caseSlug);
     if (res.ok) {
       setView(res.data.view);
       setSelectedOptionId(null);
@@ -41,15 +41,15 @@ export function useCasePlayer(caseSlug: string, initialView: PlayerView | null) 
     }
     setBusy(null);
     lock.current = false;
-  }, [caseSlug]);
+  }, [caseSlug, api]);
 
   const resync = useCallback(async (attemptId: string) => {
-    const res = await playerApi.get(attemptId);
+    const res = await api.get(attemptId);
     if (res.ok) {
       setView(res.data.view);
       setSelectedOptionId(null);
     }
-  }, []);
+  }, [api]);
 
   const submit = useCallback(async () => {
     if (lock.current || !view?.current || !selectedOptionId) return;
@@ -60,7 +60,7 @@ export function useCasePlayer(caseSlug: string, initialView: PlayerView | null) 
     const fingerprint = `${view.attemptId}:${view.revision}:${view.current.stageId}:${selectedOptionId}`;
     if (pending.current?.fingerprint !== fingerprint) pending.current = { fingerprint, submissionId: uuidv4() };
 
-    const res = await playerApi.submit(view.attemptId, {
+    const res = await api.submit(view.attemptId, {
       submissionId: pending.current.submissionId,
       stageId: view.current.stageId,
       optionId: selectedOptionId,
@@ -79,7 +79,7 @@ export function useCasePlayer(caseSlug: string, initialView: PlayerView | null) 
     }
     setBusy(null);
     lock.current = false;
-  }, [view, selectedOptionId, resync]);
+  }, [view, selectedOptionId, resync, api]);
 
   return { view, selectedOptionId, setSelectedOptionId, busy, error, start, submit };
 }

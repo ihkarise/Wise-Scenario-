@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.0-dev · Case Manager (authoring system)
+
+No database migration. Works with the two approved migrations already applied.
+
+### Added
+- Case Manager at `/admin`: home with Create case, Import JSON, Download JSON template, Case inventory.
+- Case inventory: search (Case ID, title, category, subcategory), filters, sorting, pagination (25 per page), CSV export.
+- Case editor with 10 sections and a stage builder for any number of stages (add, delete, reorder, clue, decision point, explanation, investigations, cross-reference); diagnosis builder with accepted answers and aliases; differentials; wrong-answer explanations; reasoning, insight, learning points, references.
+- Readiness checks, edit-conflict protection, unsaved-changes warning.
+- JSON format `wisecases.case` v1 with validation report, import workflow (drag and drop), export, and `data/case-template.json`.
+- Duplicate detection (Case ID, title, diagnosis/aliases, clue text); existing cases are never overwritten.
+- Preview as learner using the existing player screens and engine; nothing stored.
+- Condition inventory (`data/conditions.json` + names written in cases) with typo-tolerant, alias-aware autocomplete (staff only).
+- Optional case fields (investigations, stage explanations, reasoning, differential details, wrong-answer explanations) shown to learners only after the answer is revealed and only when written.
+- `taxonomy:manage` permission (SUPER_ADMIN, ADMIN), matching the database rule for categories.
+
+### Changed
+- The dormant admin back-end no longer needs the proposed migration: extra fields live in `cases.domain_fields.authoring`.
+- Answer-option rendering and the result screen are unchanged for existing cases; new sections appear only after the existing ones.
+
 ## 0.2.0-dev · Milestone 2: Supabase foundation (in progress)
 
 ### Added

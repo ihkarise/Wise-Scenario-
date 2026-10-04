@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/utils/cn";
 
 const control =
@@ -8,7 +8,7 @@ type FieldProps = { id: string; label: string; hint?: string; error?: string };
 
 function FieldShell({ id, label, hint, error, children }: FieldProps & { children: ReactNode }) {
   return (
-    <div className="grid gap-1.5">
+    <div className="grid content-start gap-1.5">
       <label htmlFor={id} className="text-sm font-semibold text-ink-muted">
         {label}
       </label>
@@ -51,6 +51,20 @@ export function Select({
       <select id={id} aria-invalid={error ? true : undefined} aria-describedby={describedBy({ id, label, hint, error })} className={cn(control, className)} {...rest}>
         {children}
       </select>
+    </FieldShell>
+  );
+}
+
+export function Textarea({ id, label, hint, error, className, ...rest }: FieldProps & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <FieldShell id={id} label={label} hint={hint} error={error}>
+      <textarea
+        id={id}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy({ id, label, hint, error })}
+        className={cn(control, "min-h-24 py-2 leading-relaxed", className)}
+        {...rest}
+      />
     </FieldShell>
   );
 }

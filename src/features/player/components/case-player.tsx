@@ -8,16 +8,22 @@ import { StageCard } from "@/components/ui/stage-card";
 import { ErrorState } from "@/components/ui/state-views";
 import type { CaseSummary } from "@/features/cases/case-repository";
 import type { PlayerView } from "@/lib/engine/view";
+import type { PlayerApi } from "../api-client";
 import { useCasePlayer } from "../use-case-player";
 import { AnswerForm } from "./answer-form";
 import { FeedbackBanner } from "./feedback-banner";
 import { PlayerHeader } from "./player-header";
 import { ResultPanel } from "./result-panel";
 
-type CasePlayerProps = { summary: CaseSummary; initialView: PlayerView | null };
+type CasePlayerProps = {
+  summary: CaseSummary;
+  initialView: PlayerView | null;
+  /** Only the admin Case Preview passes this; learners always play through the server. */
+  api?: PlayerApi;
+};
 
-export function CasePlayer({ summary, initialView }: CasePlayerProps) {
-  const { view, selectedOptionId, setSelectedOptionId, busy, error, start, submit } = useCasePlayer(summary.slug, initialView);
+export function CasePlayer({ summary, initialView, api }: CasePlayerProps) {
+  const { view, selectedOptionId, setSelectedOptionId, busy, error, start, submit } = useCasePlayer(summary.slug, initialView, api);
   const firstRender = useRef(true);
 
   // Move focus to the newest clue or the result so keyboard and screen-reader users follow the case.
@@ -81,7 +87,7 @@ export function CasePlayer({ summary, initialView }: CasePlayerProps) {
               <summary className="cursor-pointer font-semibold">Clues you saw ({view.clues.length})</summary>
               <div className="mt-3 grid gap-2">
                 {view.clues.map((c) => (
-                  <StageCard key={c.stageId} order={c.order} title={c.title} content={c.content} />
+                  <StageCard key={c.stageId} order={c.order} title={c.title} content={c.content} investigations={c.investigations} />
                 ))}
               </div>
             </details>
@@ -94,12 +100,13 @@ export function CasePlayer({ summary, initialView }: CasePlayerProps) {
             {view.lastAnswer && <FeedbackBanner lastAnswer={view.lastAnswer} stageOrder={view.currentStageOrder} />}
             <div className="grid gap-3">
               {view.clues.map((c) => (
-                <StageCard key={c.stageId} order={c.order} title={c.title} content={c.content} />
+                <StageCard key={c.stageId} order={c.order} title={c.title} content={c.content} investigations={c.investigations} />
               ))}
               <StageCard
                 order={view.current.order}
                 title={view.current.title}
                 content={view.current.content}
+                investigations={view.current.investigations}
                 current
                 headingId="current-clue"
                 badge={view.lastAnswer?.progression === "ADVANCED" ? <Badge tone="navy">New clue</Badge> : undefined}

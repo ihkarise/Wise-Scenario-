@@ -28,6 +28,19 @@ describe("authorization", () => {
     expect(can(user(["EDITOR"]), "case:review")).toBe(false);
   });
 
+  it("only SUPER_ADMIN and ADMIN can add categories (matches the database rule)", () => {
+    for (const role of ["SUPER_ADMIN", "ADMIN"] as const) expect(can(user([role]), "taxonomy:manage")).toBe(true);
+    for (const role of ["EDITOR", "REVIEWER", "LEARNER"] as const) expect(can(user([role]), "taxonomy:manage")).toBe(false);
+  });
+
+  it("the Case Manager is staff-only; editors can author but not publish", () => {
+    expect(can(user(["EDITOR"]), "admin:access")).toBe(true);
+    expect(can(user(["EDITOR"]), "case:edit")).toBe(true);
+    expect(can(user(["EDITOR"]), "case:publish")).toBe(false);
+    expect(can(user(["REVIEWER"]), "case:edit")).toBe(false);
+    expect(can(user(["LEARNER"]), "admin:access")).toBe(false);
+  });
+
   it("no actor means no permissions", () => {
     expect(can(null, "case:play")).toBe(false);
     expect(can(undefined, "admin:access")).toBe(false);

@@ -4,6 +4,8 @@ import { ZodError } from "zod";
 import { ServiceError } from "./service-error";
 
 const MAX_BODY_BYTES = 8 * 1024;
+/** Case files and full drafts (authoring only). */
+export const MAX_CASE_BODY_BYTES = 1024 * 1024;
 const NO_STORE = { "Cache-Control": "no-store" };
 
 export function jsonOk(data: unknown, status = 200): NextResponse {
@@ -27,7 +29,7 @@ export function toErrorResponse(error: unknown): NextResponse {
  * CSRF defence: JSON content type is required (a cross-site HTML form cannot send it without a CORS
  * preflight, which we never allow), and a present Origin header must match this site.
  */
-export async function readJsonBody(request: NextRequest): Promise<unknown> {
+export async function readJsonBody(request: NextRequest, maxBytes = MAX_BODY_BYTES): Promise<unknown> {
   const origin = request.headers.get("origin");
   if (origin && origin !== request.nextUrl.origin) throw new ServiceError("FORBIDDEN", "Cross-origin request");
 
@@ -35,7 +37,7 @@ export async function readJsonBody(request: NextRequest): Promise<unknown> {
   if (!contentType.toLowerCase().startsWith("application/json")) throw new ServiceError("UNSUPPORTED_MEDIA_TYPE");
 
   const raw = await request.text();
-  if (raw.length > MAX_BODY_BYTES) throw new ServiceError("INVALID_REQUEST", "Body too large");
+  if (raw.length > maxBytes) throw new ServiceError("INVALID_REQUEST", "Body too large", [`The file is too large (limit ${Math.round(maxBytes / 1024)} KB).`]);
   try {
     return JSON.parse(raw) as unknown;
   } catch {

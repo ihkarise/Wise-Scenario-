@@ -18,7 +18,9 @@ What works now:
 - **Demo cases as database records** (`npm run db:seed-demo`), clearly labelled DEMO CONTENT.
 - Database checks, migrations with rollback, and Row Level Security tests.
 
-Not built yet: the Admin **Case Builder** (on hold until the Supabase foundation is verified on the hosted project), dashboards, analytics and gamification.
+- **Case Manager** at `/admin` (staff only): create, edit, duplicate, preview, import/export JSON, JSON template, duplicate detection, case inventory with search and CSV export, condition inventory with autocomplete. See [docs/CASE-MANAGER.md](docs/CASE-MANAGER.md). No new database migration is needed.
+
+Not built yet: spreadsheet import, dashboards, analytics and gamification.
 
 ## Tech stack
 
@@ -86,7 +88,7 @@ Vercel is the intended host. Set the four environment variables in Vercel (the t
 ## Current limitations
 
 - The hosted Supabase project has not been migrated yet: this cloud environment's network policy blocks Supabase hosts (see docs/SUPABASE-SETUP.md §2). Everything was verified against Supabase Auth and PostgreSQL 16 running locally.
-- The Admin Case Builder is not built yet; `/admin` shows a placeholder for staff.
+- Case Manager: no spreadsheet import yet; conditions cannot be added in the browser yet; no audit log; `startingScore`/`wrongAnswerPenalty` are stored but the game keeps its existing scoring.
 - Guest attempts are not moved to an account when a guest signs up later.
 - Only single-choice questions are playable.
 - No rate limiting or Content-Security-Policy yet (planned for Milestone 10).
@@ -94,7 +96,7 @@ Vercel is the intended host. Set the four environment variables in Vercel (the t
 
 ## Next step
 
-Connect and verify the hosted Supabase project, then build the **Admin Case Builder** (the proposed migration in `supabase/proposed/` adds draft fields, the audit log and preview sessions).
+When you decide to, grant your own account SUPER_ADMIN (`npm run admin:grant`), try the Case Manager on the hosted project, then import the curriculum cases one by one through **Import JSON**.
 
 ## Screenshots
 

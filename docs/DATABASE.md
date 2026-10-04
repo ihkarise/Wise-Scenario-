@@ -9,6 +9,8 @@ PostgreSQL on Supabase. Every schema change is a version-controlled migration in
 | `20261004000100_m1_core_schema.sql` | The 11 core tables below, RLS, publish guard, sign-up trigger |
 | `20261004000200_m2_foundation.sql` | Attempts owned by a user **or** a guest; catalogue fields on `case_versions`; publish guard covers unpublishing and repointing versions; staff can read display names |
 
+The **Case Manager needs no further migration**: its extra fields are stored in the existing `cases.domain_fields` JSON column under `authoring` (see [CASE-MANAGER.md](CASE-MANAGER.md#how-data-is-stored-no-new-migration)).
+
 Proposed and **not applied** (`supabase/proposed/`): `20261004000300_m2_authoring.sql` (draft fields, saving incomplete drafts, `audit_logs`, `preview_sessions`).
 
 ## Core tables

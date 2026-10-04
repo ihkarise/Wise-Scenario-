@@ -27,7 +27,14 @@ async function request<T>(url: string, init?: RequestInit): Promise<ApiResult<T>
 
 export type SubmitAnswerRequest = { submissionId: string; stageId: string; optionId: string; expectedRevision: number };
 
-export const playerApi = {
+/** Where the player gets its views from. Learners always use `playerApi` (the server). */
+export type PlayerApi = {
+  start(caseSlug: string): Promise<ApiResult<{ view: PlayerView }>>;
+  get(attemptId: string): Promise<ApiResult<{ view: PlayerView }>>;
+  submit(attemptId: string, body: SubmitAnswerRequest): Promise<ApiResult<{ view: PlayerView; duplicate: boolean }>>;
+};
+
+export const playerApi: PlayerApi = {
   start: (caseSlug: string) =>
     request<{ view: PlayerView }>("/api/attempts", { method: "POST", body: JSON.stringify({ caseSlug }) }),
   get: (attemptId: string) => request<{ view: PlayerView }>(`/api/attempts/${encodeURIComponent(attemptId)}`),

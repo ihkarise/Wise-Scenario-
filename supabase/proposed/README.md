@@ -9,3 +9,6 @@ Files here are **awaiting approval** and are deliberately outside `supabase/migr
 - `rls_authoring.test.sql`: its security tests.
 
 Test everything, including these, with `npm run db:verify:proposed`.
+
+Note: the Case Manager (`/admin`) does **not** need this migration; it works with the approved schema.
+This proposal would still add an audit log and server-side preview sessions if approved later.

@@ -67,6 +67,15 @@ export type StageMedia = {
   license?: string;
 };
 
+/** A test result supplied by the case author. The app never invents or fills in results. */
+export type Investigation = {
+  name: string;
+  value: string;
+  unit?: string;
+  referenceRange?: string;
+  interpretation?: string;
+};
+
 export type CaseStage = {
   id: string;
   /** 1-based display order. Stages are always sorted by this. */
@@ -83,6 +92,10 @@ export type CaseStage = {
   lifeCost: number;
   /** Whether earlier clues stay on screen while this stage is shown. */
   showPreviousClues: boolean;
+  /** Optional author-supplied results shown with this clue once the learner reaches it. */
+  investigations?: Investigation[];
+  /** Optional author note linking this stage to other material; shown only in the final review. */
+  crossReference?: string;
 };
 
 export type CaseReference = {
@@ -100,6 +113,36 @@ export type CaseReference = {
 
 export type Differential = { label: string; reason: string };
 
+/** Richer differential written in the Case Manager. Shown only after the answer is revealed. */
+export type DifferentialDetail = {
+  name: string;
+  aliases: string[];
+  whyConsidered?: string;
+  whyRejected?: string;
+  clinicalExplanation?: string;
+  crossReferences: string[];
+};
+
+/** Specific feedback for a likely wrong answer. Matched to the learner's choice by name or alias. */
+export type WrongAnswerExplanation = {
+  condition: string;
+  aliases: string[];
+  explanation: string;
+  missedClues: string[];
+  betterDirection?: string;
+};
+
+/** Optional reasoning sections. Every field is author-supplied; empty fields are simply not shown. */
+export type CaseReasoning = {
+  clinicalSummary?: string;
+  diagnosticReasoning?: string;
+  investigationSummary?: string;
+  clinicalInsight?: string;
+  whereReasoningCanGoWrong?: string;
+  detailedExplanation?: string;
+  finalReasoning?: string;
+};
+
 export type CaseTeaching = {
   /** The answer shown on the result screen, e.g. "Tinea corporis". */
   answerLabel: string;
@@ -107,6 +150,10 @@ export type CaseTeaching = {
   keyClues: string[];
   learningPoints: string[];
   differentials: Differential[];
+  /** Optional, Case Manager only. Older published versions do not have these. */
+  reasoning?: CaseReasoning;
+  differentialDetails?: DifferentialDetail[];
+  wrongAnswerExplanations?: WrongAnswerExplanation[];
 };
 
 export type CaseDefinition = {

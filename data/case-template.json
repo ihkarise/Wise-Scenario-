@@ -1,0 +1,116 @@
+{
+  "format": "wisecases.case",
+  "formatVersion": 1,
+  "_notes": [
+    "WiseCases case template. Replace every value that starts with TEMPLATE: with your own content.",
+    "Required: id, title, category, difficulty, status, startingLives, startingScore, at least one stage (stageNumber, title, clue), and diagnosis (primary + at least one accepted answer).",
+    "Everything else is optional. Leave out what you do not have: WiseCases never fills in missing medical content.",
+    "Stages: use as many as the case needs (3, 5, 7, 10 ...). Number them 1, 2, 3 ... without gaps.",
+    "decisionPoint is optional. Without it, the stage asks 'What is the most likely diagnosis?' and its answer options are built from your diagnosis and differential diagnoses.",
+    "A correct answer at any stage ends the case, so the correct option should be the diagnosis.",
+    "Imported cases always start as drafts. Only a super administrator can publish.",
+    "Fields named _notes are ignored on import."
+  ],
+  "id": "CASE-000",
+  "title": "TEMPLATE: Case title",
+  "domain": "Medical Diagnosis",
+  "category": "TEMPLATE: Category",
+  "subcategory": "TEMPLATE: Subcategory",
+  "difficulty": "intermediate",
+  "status": "draft",
+  "summary": "TEMPLATE: One or two sentences shown on the case card. Do not give away the diagnosis.",
+  "learningObjective": "TEMPLATE: What the learner should be able to do after this case.",
+  "startingLives": 5,
+  "lifeLossPerWrong": 1,
+  "startingScore": 1000,
+  "wrongAnswerPenalty": 100,
+  "finalStageBehavior": "reveal_answer",
+  "stages": [
+    {
+      "stageNumber": 1,
+      "title": "TEMPLATE: Presentation",
+      "clue": "TEMPLATE: The first clue the learner reads.",
+      "decisionPoint": {
+        "question": "What is the most likely diagnosis?",
+        "options": [
+          { "label": "TEMPLATE: Example diagnosis", "correct": true },
+          { "label": "TEMPLATE: Example differential one" },
+          { "label": "TEMPLATE: Example differential two" }
+        ]
+      },
+      "explanation": "TEMPLATE: Why this clue matters. Shown in the review at the end."
+    },
+    {
+      "stageNumber": 2,
+      "title": "TEMPLATE: Investigations",
+      "clue": "TEMPLATE: The second clue, revealed after a wrong answer.",
+      "investigations": [
+        {
+          "test": "TEMPLATE: Test name",
+          "value": "TEMPLATE: Result",
+          "unit": "TEMPLATE: Unit",
+          "referenceRange": "TEMPLATE: Reference range",
+          "interpretation": "TEMPLATE: Interpretation"
+        }
+      ],
+      "explanation": "TEMPLATE: What these results show.",
+      "crossReference": "TEMPLATE: Optional pointer to related material, e.g. another case ID."
+    },
+    {
+      "stageNumber": 3,
+      "title": "TEMPLATE: The decisive clue",
+      "clue": "TEMPLATE: The clue that makes the diagnosis clear.",
+      "hint": "TEMPLATE: Optional hint shown under the question.",
+      "lifeCost": 1
+    }
+  ],
+  "diagnosis": {
+    "primary": "TEMPLATE: Example diagnosis",
+    "displayName": "TEMPLATE: Example diagnosis",
+    "acceptedAnswers": ["TEMPLATE: Example diagnosis"],
+    "aliases": ["TEMPLATE: Abbreviation"],
+    "explanation": "TEMPLATE: Why this diagnosis fits. Shown as the main explanation at the end.",
+    "detailedExplanation": "TEMPLATE: Optional longer explanation.",
+    "decisiveFindings": ["TEMPLATE: Finding one", "TEMPLATE: Finding two"],
+    "finalReasoning": "TEMPLATE: How the clues add up to the diagnosis."
+  },
+  "differentialDiagnoses": [
+    {
+      "name": "TEMPLATE: Example differential one",
+      "aliases": [],
+      "whyConsidered": "TEMPLATE: Why it was reasonable to consider.",
+      "whyRejected": "TEMPLATE: Why the clues argue against it.",
+      "clinicalExplanation": "TEMPLATE: Optional clinical explanation.",
+      "crossReferences": []
+    },
+    {
+      "name": "TEMPLATE: Example differential two",
+      "whyRejected": "TEMPLATE: Why the clues argue against it."
+    }
+  ],
+  "wrongAnswerExplanations": [
+    {
+      "condition": "TEMPLATE: Example differential one",
+      "aliases": [],
+      "explanation": "TEMPLATE: Feedback for a learner who chose this answer.",
+      "missedClues": ["TEMPLATE: A clue that points elsewhere"],
+      "betterDirection": "TEMPLATE: What to think about instead."
+    }
+  ],
+  "clinicalSummary": "TEMPLATE: Short summary of the whole case.",
+  "clinicalInsight": "TEMPLATE: The take-home insight.",
+  "diagnosticReasoning": "TEMPLATE: The reasoning journey from first clue to diagnosis.",
+  "investigationSummary": "TEMPLATE: What the investigations showed overall.",
+  "whereReasoningCanGoWrong": "TEMPLATE: Common traps in this case.",
+  "learningPoints": ["TEMPLATE: Learning point one", "TEMPLATE: Learning point two"],
+  "references": [
+    {
+      "title": "TEMPLATE: Reference title",
+      "authors": "TEMPLATE: Authors",
+      "source": "TEMPLATE: Journal, book or website",
+      "year": 2024,
+      "type": "journal",
+      "verified": false
+    }
+  ]
+}

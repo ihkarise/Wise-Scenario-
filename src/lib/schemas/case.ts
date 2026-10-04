@@ -38,6 +38,17 @@ const mediaSchema = z.object({
   license: z.string().max(200).optional(),
 });
 
+const optionalText = (max: number) => z.string().trim().min(1).max(max).optional();
+const textList = (maxItems: number, maxLength: number) => z.array(text(maxLength)).max(maxItems);
+
+const investigationSchema = z.object({
+  name: text(200),
+  value: text(200),
+  unit: optionalText(60),
+  referenceRange: optionalText(200),
+  interpretation: optionalText(1000),
+});
+
 const stageSchema = z.object({
   id: contentIdSchema,
   order: z.int().min(1),
@@ -50,6 +61,8 @@ const stageSchema = z.object({
   media: z.array(mediaSchema).max(10),
   lifeCost: z.int().min(0).max(20),
   showPreviousClues: z.boolean(),
+  investigations: z.array(investigationSchema).max(30).optional(),
+  crossReference: optionalText(1000),
 });
 
 const referenceSchema = z.object({
@@ -86,6 +99,43 @@ const caseObjectSchema = z.object({
     keyClues: z.array(text(500)).max(20),
     learningPoints: z.array(text(500)).max(20),
     differentials: z.array(z.object({ label: text(200), reason: text(1000) })).max(20),
+    // Optional Case Manager fields: older published versions do not have them and still parse.
+    reasoning: z
+      .object({
+        clinicalSummary: optionalText(8000),
+        diagnosticReasoning: optionalText(8000),
+        investigationSummary: optionalText(8000),
+        clinicalInsight: optionalText(8000),
+        whereReasoningCanGoWrong: optionalText(8000),
+        detailedExplanation: optionalText(8000),
+        finalReasoning: optionalText(8000),
+      })
+      .optional(),
+    differentialDetails: z
+      .array(
+        z.object({
+          name: text(200),
+          aliases: textList(30, 200),
+          whyConsidered: optionalText(4000),
+          whyRejected: optionalText(4000),
+          clinicalExplanation: optionalText(4000),
+          crossReferences: textList(20, 500),
+        }),
+      )
+      .max(20)
+      .optional(),
+    wrongAnswerExplanations: z
+      .array(
+        z.object({
+          condition: text(200),
+          aliases: textList(30, 200),
+          explanation: text(4000),
+          missedClues: textList(20, 500),
+          betterDirection: optionalText(2000),
+        }),
+      )
+      .max(30)
+      .optional(),
   }),
   references: z.array(referenceSchema).max(30),
   isDemo: z.boolean(),
