@@ -9,5 +9,7 @@ export default defineConfig({
     environment: "node",
     alias: { "server-only": fileURLToPath(new URL("./tests/support/server-only-stub.ts", import.meta.url)) },
     include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+    // Integration tests need a database and run via `npm run test:integration`.
+    exclude: ["tests/integration/**", "node_modules/**"],
   },
 });

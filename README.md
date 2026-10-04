@@ -6,59 +6,64 @@ A learner reads a case and chooses an answer. A wrong answer costs a life and re
 
 > WiseCases is intended for medical education and learning. It is not a substitute for professional medical judgment, diagnosis or treatment.
 
-## Current milestone: 1 (foundation and core case engine)
+## Current milestone: 2 (Supabase foundation in progress)
 
 What works now:
 
-- A domain-agnostic **case engine** (`src/lib/engine/`): variable lives, variable stages, different options at each stage, a life cost per stage, four configurable final-stage behaviours, and deterministic scoring.
-- **Server-authoritative play.** The browser sends only IDs. The server decides correctness, lives, score, stage and completion, and returns only the current stage. A refresh resumes the attempt with the same lives, and double clicks never cost two lives.
-- A mobile-first **player**: lives, clue progress, stacked clues, answer options, feedback, success and failure screens, a reasoning review and share text that hides the answer.
-- **Five demo cases**, clearly labelled DEMO CONTENT, with placeholder references.
-- A **Supabase migration** for the 11 core tables, with Row Level Security and its own tests.
-- **Automated tests** for the engine, the play API, permissions and the database policies, all passing.
+- A domain-agnostic **case engine** (`src/lib/engine/`): variable lives and stages, different options at each stage, a life cost per stage, four final-stage behaviours, and deterministic scoring.
+- **Server-authoritative play backed by PostgreSQL/Supabase.** The browser sends only IDs. The server decides correctness, lives, score, stage and completion, returns only the current stage, and stores every attempt and answer in the database. Attempts survive refreshes and server restarts.
+- **Published versions.** Learners play frozen snapshots in `case_versions`, so later edits never change a game in progress.
+- **Sign-in** with email and password (Supabase Auth). **Guests** can play with a signed, httpOnly cookie, with no registration needed.
+- **Roles from the database** (`user_roles`). The owner is made SUPER_ADMIN with `npm run admin:grant`. Admin pages and APIs refuse signed-out visitors and non-staff.
+- **Demo cases as database records** (`npm run db:seed-demo`), clearly labelled DEMO CONTENT.
+- Database checks, migrations with rollback, and Row Level Security tests.
 
-What does not exist yet: sign-in, the admin Case Builder, a real database connection, dashboards, analytics and gamification. See [Current limitations](#current-limitations).
+Not built yet: the Admin **Case Builder** (on hold until the Supabase foundation is verified on the hosted project), dashboards, analytics and gamification.
 
 ## Tech stack
 
-Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind CSS 4 · Zod 4 · Vitest · ESLint · Supabase (PostgreSQL, Auth, Storage, RLS) · Vercel
+Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind CSS 4 · Zod 4 · Supabase (PostgreSQL, Auth, RLS) via `postgres` and `@supabase/ssr` · Vitest · ESLint · Vercel
 
 ## Local setup
 
-Requirements: Node.js 20.9+ (22 recommended, see `.nvmrc`). PostgreSQL 15+ binaries are needed only for `npm run db:verify`.
+Requirements: Node.js 20.9+ (22 recommended, see `.nvmrc`), and a Supabase project. PostgreSQL 15+ binaries are needed only for the database test scripts.
 
 ```bash
 npm install
-cp .env.example .env.local     # optional in Milestone 1; defaults work
-npm run dev                    # http://localhost:3000
+cp .env.example .env.local      # fill in the four values (see docs/SUPABASE-SETUP.md)
+npm run db:migrate:dry          # see what will be applied (changes nothing)
+npm run db:migrate              # apply approved migrations
+npm run db:seed-demo            # load demo cases
+npm run dev                     # http://localhost:3000
 ```
 
-Open **Cases** and play any demo case. Attempts are kept in server memory and reset when the server restarts.
+Then sign up at `/sign-up` and run `npm run admin:grant -- --email <you>` to become SUPER_ADMIN. Full guide: [docs/SUPABASE-SETUP.md](docs/SUPABASE-SETUP.md).
 
 ## Environment variables
 
-| Variable | Used from | Purpose |
+| Variable | Browser? | Purpose |
 |---|---|---|
-| `WISECASES_DATA_SOURCE` | M1 | `memory` (default). `supabase` arrives in Milestone 2 |
-| `NEXT_PUBLIC_SUPABASE_URL` | M2 | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | M2 | Supabase public (anon) key |
-| `SUPABASE_SERVICE_ROLE_KEY` | M2 | **Server only.** Never expose or prefix with `NEXT_PUBLIC_` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes (public) | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes (public) | Email/password sign-in |
+| `DATABASE_URL` | **No, server only** | PostgreSQL pooler connection string. Used to check answers and save attempts; admin actions run as the signed-in user under RLS |
+| `WISECASES_SESSION_SECRET` | **No, server only** | Random 32+ character string that signs guest cookies |
 
-Never commit `.env` files. Production values are set in Vercel and Supabase settings.
+Never commit `.env` files. The Supabase secret API key is not needed.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
 | `npm run dev` | Development server |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | Generates route types, then runs `tsc --noEmit` |
-| `npm test` | All unit, service and HTTP tests (Vitest) |
-| `npm run build` | Production build |
-| `npm run check` | Lint, typecheck, test and build in one go |
-| `npm run db:verify` | Applies migrations to a throwaway PostgreSQL and runs the RLS and integrity tests |
+| `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` | Quality gates (`npm run check` runs all four) |
+| `npm run test:integration` | Repository tests against a throwaway PostgreSQL |
+| `npm run db:verify` / `db:verify:proposed` | Migrations, rollback and RLS tests on a throwaway database (approved / plus proposed) |
+| `npm run db:migrate:dry` · `db:migrate` | Show / apply pending migrations on `DATABASE_URL` (never `supabase/proposed`) |
+| `npm run db:check` | Read-only checks of the connected database |
+| `npm run db:seed-demo` | Load demo cases (idempotent) |
+| `npm run admin:grant -- --email <e> [--role R] [--revoke]` | Grant or revoke a role |
 
-CI (`.github/workflows/ci.yml`) runs all of these on every push and pull request.
+CI (`.github/workflows/ci.yml`) runs the quality gates, the database tests and the integration tests.
 
 ## Architecture overview
 
@@ -74,27 +79,22 @@ Browser ──IDs only──► Next.js route handlers ──► AttemptService 
 
 Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/DATABASE.md](docs/DATABASE.md) · [SECURITY.md](SECURITY.md) · Milestone 0: [report](docs/MILESTONE-0-REPORT.md) and [interactive blueprint](docs/blueprint/index.html)
 
-## Supabase setup (Milestone 2)
-
-The migration is ready in `supabase/migrations/`. Once the project exists: `supabase link --project-ref <ref>` then `supabase db push`, and fill in the environment variables above. The app keeps using in-memory data until the Supabase repositories are added in Milestone 2.
-
 ## Deployment
 
-Vercel is the intended host. Milestone 1 stores attempts in server memory, which does not persist on serverless hosting, so **do not deploy Milestone 1 for real users**. A production deployment guide comes with Milestone 12.
+Vercel is the intended host. Set the four environment variables in Vercel (the two secrets without `NEXT_PUBLIC_`) and use the Supabase **transaction pooler** connection string. A full deployment guide comes with Milestone 12.
 
 ## Current limitations
 
-- No sign-in yet. Every visitor is a guest identified by a random httpOnly cookie, and nobody can reach the admin area (it returns 403).
-- Attempts live in memory: they are lost on restart and are not shared between server instances.
-- Only single-choice questions are playable. The other interaction types are reserved in the schema.
-- No Case Builder, dashboard, library filters, analytics, achievements, daily case or PWA yet.
+- The hosted Supabase project has not been migrated yet: this cloud environment's network policy blocks Supabase hosts (see docs/SUPABASE-SETUP.md §2). Everything was verified against Supabase Auth and PostgreSQL 16 running locally.
+- The Admin Case Builder is not built yet; `/admin` shows a placeholder for staff.
+- Guest attempts are not moved to an account when a guest signs up later.
+- Only single-choice questions are playable.
 - No rate limiting or Content-Security-Policy yet (planned for Milestone 10).
 - Demo cases are fictional and unreviewed, and their references are placeholders.
-- Dark mode is not built yet; components use central tokens so it can be added later.
 
-## Next milestone
+## Next step
 
-**Milestone 2: database, authentication and the Admin Case Builder foundation.** It covers Supabase repositories behind the existing interfaces, email sign-in and guest sessions through Supabase Auth, roles from `user_roles`, demo cases seeded into the database, and the first admin screens.
+Connect and verify the hosted Supabase project, then build the **Admin Case Builder** (the proposed migration in `supabase/proposed/` adds draft fields, the audit log and preview sessions).
 
 ## Screenshots
 

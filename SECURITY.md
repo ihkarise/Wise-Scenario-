@@ -9,7 +9,7 @@ WiseCases is a private, proprietary project. Report vulnerabilities privately to
 - Authorization is enforced on the server (proxy, pages, services) and in the database (RLS). Hiding a button is never the control.
 - No secrets in Git. `.env*` files are ignored; `.env.example` holds placeholders only. The Supabase service-role key is server-only.
 
-## Milestone 1 checks
+## Checks (Milestones 1–2)
 
 | Threat | Control | Evidence |
 |---|---|---|
@@ -26,10 +26,18 @@ WiseCases is a private, proprietary project. Report vulnerabilities privately to
 | Editor publishing | Publish trigger allows only `SUPER_ADMIN` | `rls.test.sql`, `permissions.test.ts` |
 | CSRF on answer endpoints | JSON content type required; cross-origin `Origin` rejected; `SameSite=Lax` httpOnly cookie | `attempt-handlers.test.ts` |
 | Leaking internals in errors | Fixed plain-language messages; details only in server logs | `attempt-handlers.test.ts` |
+| Forged or chosen guest identity | Guest cookie = random UUID + HMAC-SHA256 signature with a server secret; unsigned/forged cookies rejected | `permissions.test.ts`, `attempt-handlers.test.ts`, `foundation.test.ts` |
+| Roles supplied by the client | Roles loaded from `user_roles` on the server for every request; only SUPER_ADMIN can grant roles | `foundation.test.ts`, `rls.test.sql` |
+| Signed-out or non-staff access to admin | Proxy redirects / returns 401; server re-checks roles; RLS in the database | browser test; `foundation.test.ts` |
+| Admin actions bypassing RLS | Server runs admin queries as the signed-in user (`set local role authenticated`) | `foundation.test.ts` |
+| Editor unpublishing or repointing the live version | Publish guard trigger covers status, `published_version` and `published_at` | `rls.test.sql` |
+| Open redirect after sign-in | Only same-site relative `next` paths accepted | browser test |
+| Secrets in the browser | Only `NEXT_PUBLIC_SUPABASE_URL` and the publishable key are public; build scanned for the connection string and session secret | release check |
 
 ## Known gaps (planned)
 
-- Guest identity is an unguessable random ID in an httpOnly cookie. Milestone 2 replaces it with Supabase Auth (email and anonymous sessions).
+- Guest attempts are not transferred to an account when the guest signs up later.
 - No rate limiting yet on the answer endpoint (Milestone 10).
 - No Content-Security-Policy header yet (Milestone 10). Basic security headers are set in `next.config.ts`.
+- The server database credential (`DATABASE_URL`) can read correct answers by design; it must stay server-only (never `NEXT_PUBLIC_`), and the database password should be rotated if it is ever shared outside a secret store.
 - `npm audit` reports a high-severity advisory in `braces`, used only by the dev-time ESLint toolchain (`eslint-config-next`). No patched version exists yet, and it is not shipped to users. `npm audit --omit=dev` is clean.

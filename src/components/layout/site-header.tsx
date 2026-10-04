@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { isStaff } from "@/lib/auth/actor";
+import { getRequestActor } from "@/lib/server/request-actor";
 
-export function SiteHeader() {
+const navLink = "rounded-lg px-3 py-2 text-ink-muted hover:bg-blue-soft hover:text-wise-blue";
+
+export async function SiteHeader() {
+  const actor = await getRequestActor().catch(() => null);
+  const signedIn = actor?.kind === "user";
   return (
     <header className="border-b border-line bg-surface">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
@@ -13,10 +19,31 @@ export function SiteHeader() {
           </svg>
           WiseCases
         </Link>
-        <nav aria-label="Main" className="flex items-center gap-1 text-sm font-semibold">
-          <Link href="/play" className="rounded-lg px-3 py-2 text-ink-muted hover:bg-blue-soft hover:text-wise-blue">
+        <nav aria-label="Main" className="flex flex-wrap items-center justify-end gap-1 text-sm font-semibold">
+          <Link href="/play" className={navLink}>
             Cases
           </Link>
+          {isStaff(actor) && (
+            <Link href="/admin" className={navLink}>
+              Admin
+            </Link>
+          )}
+          {signedIn ? (
+            <>
+              <Link href="/account" className={navLink}>
+                Account
+              </Link>
+              <form action="/auth/sign-out" method="post">
+                <button type="submit" className={`${navLink} cursor-pointer`}>
+                  Sign out
+                </button>
+              </form>
+            </>
+          ) : (
+            <Link href="/sign-in" className={navLink}>
+              Sign in
+            </Link>
+          )}
         </nav>
       </div>
     </header>

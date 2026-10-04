@@ -2,7 +2,16 @@
 
 PostgreSQL on Supabase. Every schema change is a version-controlled migration in `supabase/migrations/`.
 
-## Milestone 1 tables (created)
+## Applied migrations
+
+| File | Contents |
+|---|---|
+| `20261004000100_m1_core_schema.sql` | The 11 core tables below, RLS, publish guard, sign-up trigger |
+| `20261004000200_m2_foundation.sql` | Attempts owned by a user **or** a guest; catalogue fields on `case_versions`; publish guard covers unpublishing and repointing versions; staff can read display names |
+
+Proposed and **not applied** (`supabase/proposed/`): `20261004000300_m2_authoring.sql` (draft fields, saving incomplete drafts, `audit_logs`, `preview_sessions`).
+
+## Core tables
 
 | Group | Table | Purpose |
 |---|---|---|
@@ -42,12 +51,17 @@ Covered by `supabase/tests/rls.test.sql`.
 
 | Task | How |
 |---|---|
-| Test all migrations and RLS locally | `npm run db:verify` (needs PostgreSQL 15+ binaries; starts and deletes a throwaway database) |
-| Apply to a Supabase project | `supabase link --project-ref <ref>` then `supabase db push` |
-| Seed development data | `supabase db reset` applies migrations, then `supabase/seed.sql` (local only) |
-| Reset local database safely | `supabase db reset`. **Local only**: never run against production |
-| Roll back locally | `psql -f supabase/rollback/20261004000100_m1_core_schema.down.sql` (destroys all cases and attempts) |
-| Roll back in production | Do not. Write a new forward migration that fixes the problem |
+| Test migrations, rollback and RLS locally | `npm run db:verify` (approved) · `npm run db:verify:proposed` (plus proposed) |
+| Repository integration tests | `npm run test:integration` |
+| See pending migrations on the connected database | `npm run db:migrate:dry` (changes nothing) |
+| Apply approved migrations | `npm run db:migrate` (records them in `supabase_migrations.schema_migrations`, like the Supabase CLI; never applies `supabase/proposed`) |
+| Read-only health check | `npm run db:check` |
+| Seed initial domains | `psql "$DATABASE_URL" -f supabase/seed.sql` |
+| Load demo cases | `npm run db:seed-demo` (idempotent) |
+| Grant a role | `npm run admin:grant -- --email <email> --role SUPER_ADMIN` |
+| Roll back locally | Files in `supabase/rollback/` (newest first). **Local only**; in production, fix forward |
+
+Connection strings and the step-by-step guide for the hosted project: [SUPABASE-SETUP.md](SUPABASE-SETUP.md).
 
 `supabase/tests/support/` contains a small stand-in for Supabase (roles, `auth.users`, `auth.uid()`) used only by `npm run db:verify`. It must never be applied to a Supabase project.
 

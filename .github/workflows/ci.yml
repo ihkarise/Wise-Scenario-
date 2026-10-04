@@ -32,10 +32,20 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
 
   database:
-    name: Migrations and RLS tests
+    name: Migrations, RLS and integration tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      # ubuntu-latest ships PostgreSQL server binaries; the script starts a throwaway local instance.
-      - run: bash scripts/verify-db.sh
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # ubuntu-latest ships PostgreSQL server binaries; each script starts and removes a throwaway instance.
+      - name: Approved migrations, rollback and RLS tests
+        run: bash scripts/verify-db.sh
+      - name: Proposed (Case Builder) migration tests
+        run: bash scripts/verify-db.sh --proposed
+      - name: Repository integration tests
+        run: npm run test:integration

@@ -18,7 +18,13 @@
     "test:watch": "vitest",
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "db:verify": "bash scripts/verify-db.sh",
-    "db:verify:proposed": "bash scripts/verify-db.sh --proposed"
+    "db:verify:proposed": "bash scripts/verify-db.sh --proposed",
+    "db:check": "tsx scripts/db.ts check",
+    "db:migrate:dry": "tsx scripts/db.ts migrate --dry-run",
+    "db:migrate": "tsx scripts/db.ts migrate",
+    "db:seed-demo": "tsx scripts/db.ts seed-demo",
+    "admin:grant": "tsx scripts/db.ts grant-role",
+    "test:integration": "bash scripts/test-integration.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
