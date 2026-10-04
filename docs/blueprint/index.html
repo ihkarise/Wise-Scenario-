@@ -1,0 +1,1312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WiseCases Blueprint</title>
+<meta name="description" content="Milestone 0 architecture review for WiseCases: phases, case engine demo, case builder demo and database design.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@500;600;700&display=swap">
+<style>
+/* Layout: navy structural top band with tabs → cream working canvas → one panel per tab; WiseAitechs brand system. */
+:root{
+  --bg:#F4F1EC;           /* WiseAitechs cream */
+  --surface:#FFFFFF;
+  --card:#E9EEF3;         /* WiseAitechs light grey content cards */
+  --navy:#0B2C4D;         /* structure: bands, icon circles */
+  --strong:#0B2C4D;       /* navy used for selected / emphasis states */
+  --navy-2:#16406A;
+  --ink:#0B2C4D;
+  --ink-2:#4B5E74;
+  --ink-3:#7A8A9C;
+  --line:#D6DEE7;
+  --red:#E53935;          /* keywords + wrong state only */
+  --yellow:#FFC107;       /* CTAs only */
+  --yellow-ink:#2B2100;
+  --teal:#018080;         /* correct state */
+  --teal-soft:#DDF1EF;
+  --red-soft:#FCE4E3;
+  --yellow-soft:#FFF3CD;
+  --on-navy:#FFFFFF;
+  --on-navy-2:#B9C8DA;
+  --grid:rgba(11,44,77,.07);
+  --shadow:0 1px 2px rgba(11,44,77,.06),0 10px 28px -12px rgba(11,44,77,.18);
+  --font-display:'Poppins',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-body:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r-card:18px; --r-md:12px; --r-sm:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#07131F; --surface:#0E1F31; --card:#132A41; --navy:#0F2F51; --strong:#2A5F96; --navy-2:#1B4673;
+  --ink:#E6EDF5; --ink-2:#A3B4C7; --ink-3:#7C8FA4; --line:#22405E;
+  --red:#FF6B66; --yellow:#FFC93C; --yellow-ink:#231B00; --teal:#35B8AC; --teal-soft:#0F3633; --red-soft:#3A1A1C; --yellow-soft:#3A2F0E;
+  --on-navy:#FFFFFF; --on-navy-2:#A9BCD2; --grid:rgba(230,237,245,.05);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px -14px rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#07131F; --surface:#0E1F31; --card:#132A41; --navy:#0F2F51; --strong:#2A5F96; --navy-2:#1B4673;
+  --ink:#E6EDF5; --ink-2:#A3B4C7; --ink-3:#7C8FA4; --line:#22405E;
+  --red:#FF6B66; --yellow:#FFC93C; --yellow-ink:#231B00; --teal:#35B8AC; --teal-soft:#0F3633; --red-soft:#3A1A1C; --yellow-soft:#3A2F0E;
+  --on-navy:#FFFFFF; --on-navy-2:#A9BCD2; --grid:rgba(230,237,245,.05);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px -14px rgba(0,0,0,.6); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-display);margin:0;text-wrap:balance;line-height:1.15}
+h1,h2{text-transform:uppercase;letter-spacing:.01em}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--yellow);outline-offset:2px;border-radius:6px}
+.kw{color:var(--red)}
+.mono{font-family:var(--font-mono)}
+.eyebrow{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.muted{color:var(--ink-2)}
+.wrap{max-width:1180px;margin-inline:auto;padding-inline:20px}
+@media (max-width:520px){.wrap{padding-inline:16px}}
+
+/* ---------- top band ---------- */
+.band{background:var(--navy);color:var(--on-navy);position:sticky;top:env(safe-area-inset-top,0px);z-index:20;box-shadow:0 1px 0 rgba(255,255,255,.06)}
+.band-row{display:flex;align-items:center;gap:14px;padding-block:12px 6px;flex-wrap:wrap}
+.wordmark{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+.wordmark .mark{width:30px;height:30px;border-radius:9px;background:var(--surface);display:grid;place-items:center}
+.wordmark small{font-family:var(--font-body);font-weight:500;font-size:12px;color:var(--on-navy-2);letter-spacing:0}
+.band-meta{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip-dark{font-family:var(--font-mono);font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.18);color:var(--on-navy-2);white-space:nowrap}
+.chip-dark b{color:var(--yellow);font-weight:500}
+.tabs{position:relative;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding-block:6px 10px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{position:relative;z-index:1;border:0;background:none;color:var(--on-navy-2);padding:8px 14px;border-radius:999px;font-weight:600;font-size:13.5px;cursor:pointer;white-space:nowrap;transition:color .2s}
+.tab[aria-selected="true"]{color:var(--strong)}
+.tab:hover:not([aria-selected="true"]){color:#fff}
+.tab-ind{position:absolute;z-index:0;top:6px;height:calc(100% - 16px);border-radius:999px;background:#fff;transition:transform .35s cubic-bezier(.3,.7,.2,1),width .35s cubic-bezier(.3,.7,.2,1)}
+
+main{padding-block:28px 56px;overflow-x:clip}
+[hidden]{display:none!important}
+.panel{display:grid;gap:28px}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.section-head h2{font-size:clamp(20px,2.6vw,26px)}
+.section-head p{max-width:62ch}
+
+/* ---------- generic ---------- */
+.card{background:var(--card);border-radius:var(--r-card);padding:20px}
+.surface{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:11px 18px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:transform .15s,background .2s,border-color .2s,opacity .2s;min-height:44px}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-cta{position:relative;overflow:hidden;background:var(--yellow);color:var(--yellow-ink)}
+.btn-cta::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);transform:translateX(-120%);transition:transform .7s}
+.btn-cta:hover:not([disabled])::after{transform:translateX(120%)}
+.btn-navy{background:var(--strong);color:var(--on-navy)}
+.btn-navy:hover:not([disabled]){background:var(--navy-2)}
+.btn-line{background:transparent;border-color:var(--line);color:var(--ink)}
+.btn-line:hover:not([disabled]){border-color:var(--ink-3)}
+.btn-sm{padding:6px 12px;min-height:34px;font-size:13px}
+.icon-btn{width:34px;height:34px;display:inline-grid;place-items:center;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--ink-2)}
+.icon-btn:hover{color:var(--ink);border-color:var(--ink-3)}
+.icon-btn[disabled]{opacity:.35;cursor:not-allowed}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap}
+.badge.navy{background:var(--strong);color:var(--on-navy);border-color:transparent}
+.badge.ok{background:var(--teal-soft);color:var(--teal);border-color:transparent}
+.badge.bad{background:var(--red-soft);color:var(--red);border-color:transparent}
+.badge.warn{background:var(--yellow-soft);color:var(--ink);border-color:transparent}
+.ico{width:18px;height:18px;flex:none}
+.ico-circle{width:40px;height:40px;border-radius:50%;background:var(--strong);color:#fff;display:grid;place-items:center;flex:none}
+.ico-circle .ico{width:20px;height:20px}
+
+/* spotlight hover (21st.dev-style) */
+.spot{position:relative;isolation:isolate;overflow:hidden}
+.spot::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--yellow) 22%,transparent),transparent 65%);opacity:0;transition:opacity .3s}
+.spot:hover::before{opacity:1}
+
+/* animated border beam */
+@property --beam{syntax:'<angle>';inherits:false;initial-value:0deg}
+.beam{border:1.5px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,conic-gradient(from var(--beam),transparent 0 62%,var(--red) 78%,var(--yellow) 90%,transparent 100%) border-box;animation:beam 5s linear infinite}
+@keyframes beam{to{--beam:360deg}}
+
+/* ---------- overview ---------- */
+.hero{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:36px;align-items:center;padding:36px 0 8px}
+.hero::before{content:"";position:absolute;inset:-28px -20px 0;z-index:-1;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 30% 40%,#000 30%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 30% 40%,#000 30%,transparent 75%)}
+.hero h1{font-size:clamp(34px,5.4vw,62px);font-weight:700;line-height:1.02}
+.hero .lead{font-size:17px;color:var(--ink-2);max-width:54ch;margin-top:18px}
+.hero-ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.hero-tag{display:inline-flex;gap:8px;align-items:center;margin-bottom:16px;font-size:12.5px;font-weight:600;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);padding:5px 12px 5px 6px;border-radius:999px}
+.hero-tag span{background:var(--strong);color:#fff;border-radius:999px;padding:2px 8px;font-size:11px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px}
+.stat b{display:block;font-family:var(--font-display);font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--ink-2)}
+.status-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:16px}
+.checklist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.checklist li{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.checklist .k{min-width:150px;color:var(--ink-2)}
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.bento .tile{grid-column:span 2;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:20px;display:grid;gap:10px;align-content:start}
+.bento .tile.wide{grid-column:span 3}
+.bento .tile h3{font-size:16px;font-weight:600}
+.bento .tile p{font-size:14px;color:var(--ink-2)}
+.arch{display:grid;gap:10px}
+.arch-layer{display:grid;grid-template-columns:170px 1fr;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px}
+.arch-layer.navy{background:var(--strong);color:var(--on-navy);border-color:transparent}
+.arch-layer h4{font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.arch-layer .pills{display:flex;flex-wrap:wrap;gap:6px}
+.arch-layer .pill{font-size:12.5px;padding:4px 10px;border-radius:999px;background:var(--card);color:var(--ink)}
+.arch-layer.navy .pill{background:rgba(255,255,255,.1);color:#fff}
+.arch-layer.navy .pill.hl{background:var(--yellow);color:var(--yellow-ink);font-weight:600}
+.arch-arrow{justify-self:center;color:var(--ink-3);font-family:var(--font-mono);font-size:11px}
+
+/* ---------- phases ---------- */
+.phases{display:grid;grid-template-columns:270px 1fr;gap:20px;align-items:start}
+.rail{display:grid;gap:4px;position:sticky;top:120px}
+.rail-group{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:10px 12px 4px}
+.rail-item{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:8px;text-align:left;border:1px solid transparent;background:none;border-radius:12px;padding:8px 10px;cursor:pointer}
+.rail-item:hover{background:var(--card)}
+.rail-item[aria-selected="true"]{background:var(--surface);border-color:var(--line);box-shadow:var(--shadow)}
+.rail-item .code{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--ink-3)}
+.rail-item[aria-selected="true"] .code{color:var(--red)}
+.rail-item .nm{font-weight:600;font-size:13.5px;line-height:1.25}
+.rail-item .sz{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
+.phase-detail{border-radius:22px;padding:24px;display:grid;gap:22px;min-width:0}
+.pd-head{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.pd-head h3{font-size:clamp(22px,3vw,30px);text-transform:uppercase;font-weight:700;margin-top:4px}
+.pd-goal{font-size:16px;color:var(--ink-2);max-width:64ch;margin-top:8px}
+.pd-nav{display:flex;gap:8px}
+.pd-stage{background:var(--card);border-radius:18px;padding:22px;display:grid;place-items:center;min-height:300px;overflow:hidden}
+.pd-stage>*{width:100%}
+.pd-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.pd-cols h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-family:var(--font-mono);font-weight:500;color:var(--ink-3)}
+.pd-cols ul{margin:0;padding-left:18px;display:grid;gap:5px;font-size:14px}
+.mvp-flag{display:inline-flex;gap:6px;align-items:center;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;background:var(--yellow);color:var(--yellow-ink);padding:2px 8px;border-radius:999px}
+
+/* ---------- mockups ---------- */
+.mk{font-size:12px;line-height:1.4;color:var(--ink);text-align:left}
+.fr-browser{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);max-width:760px;margin-inline:auto}
+.fr-bar{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
+.fr-bar i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
+.fr-url{margin-left:10px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);background:var(--surface);border:1px solid var(--line);padding:3px 10px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fr-body{padding:14px}
+.fr-phone{width:min(290px,100%);margin-inline:auto;border-radius:34px;border:9px solid var(--navy);background:var(--surface);padding:16px 13px 18px;box-shadow:var(--shadow);position:relative}
+.fr-phone::before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:62px;height:5px;border-radius:9px;background:var(--line)}
+.mk-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mk-col{display:grid;gap:8px}
+.mk-g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mk-g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mk-g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mk-card{background:var(--card);border-radius:10px;padding:10px}
+.mk-h{font-family:var(--font-display);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+.mk-s{font-size:10.5px;color:var(--ink-2)}
+.mk-opt{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);display:flex;gap:8px;align-items:center;font-weight:500}
+.mk-opt .l{width:18px;height:18px;border-radius:6px;background:var(--card);display:grid;place-items:center;font-size:10px;font-weight:700;flex:none}
+.mk-opt.sel{border-color:var(--strong);box-shadow:inset 0 0 0 1px var(--strong)}
+.mk-opt.ok{border-color:var(--teal);background:var(--teal-soft)}
+.mk-btn{border-radius:999px;padding:7px 12px;font-weight:600;font-size:11px;text-align:center;background:var(--yellow);color:var(--yellow-ink)}
+.mk-btn.navy{background:var(--strong);color:#fff}
+.mk-btn.line{background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.mk-input{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink-3);font-size:11px}
+.mk-skel{height:8px;border-radius:6px;background:linear-gradient(90deg,var(--card),var(--line),var(--card));background-size:200% 100%;animation:shim 1.6s infinite}
+@keyframes shim{to{background-position:-200% 0}}
+.mk-bars{display:grid;gap:7px}
+.mk-bars .r{display:grid;grid-template-columns:110px 1fr 38px;gap:8px;align-items:center;font-size:11px}
+.mk-bars .t{height:12px;border-radius:4px;background:var(--card);overflow:hidden}
+.mk-bars .f{height:100%;border-radius:4px;background:var(--ink-3)}
+.mk-bars .f.hot{background:var(--red)}
+.mk-bars .f.ok{background:var(--teal)}
+.mk-kpi b{font-family:var(--font-display);font-size:17px;display:block;font-variant-numeric:tabular-nums}
+.mk-side{display:grid;gap:4px;align-content:start}
+.mk-side div{padding:6px 8px;border-radius:8px;display:flex;justify-content:space-between;gap:6px;font-weight:500}
+.mk-side .on{background:var(--strong);color:#fff}
+.mk-tree{font-family:var(--font-mono);font-size:10.5px;white-space:pre;color:var(--ink-2);line-height:1.6;overflow-x:auto}
+.mk-pipe{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap}
+.mk-pipe .st{flex:1 1 120px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:4px}
+.mk-pipe .ar{align-self:center;color:var(--ink-3)}
+.gauge{--v:90;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--teal) calc(var(--v)*1%),var(--card) 0);display:grid;place-items:center;margin-inline:auto}
+.gauge span{width:50px;height:50px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:14px}
+
+/* ---------- hearts / progress (shared) ---------- */
+.hearts{display:inline-flex;gap:4px;align-items:center}
+.heart{width:22px;height:22px;display:block}
+.heart.full path{fill:var(--red);stroke:var(--red)}
+.heart.empty path{fill:transparent;stroke:var(--ink-3)}
+.heart.pop{animation:pop .6s ease-out}
+@keyframes pop{0%{transform:scale(1.35)}100%{transform:scale(1)}}
+.hearts.sm .heart{width:14px;height:14px}
+.dots{display:flex;gap:6px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--ink-3);background:transparent}
+.dot.done{background:var(--ink-3);border-color:var(--ink-3)}
+.dot.now{background:var(--strong);border-color:var(--strong);box-shadow:0 0 0 3px color-mix(in srgb,var(--yellow) 60%,transparent)}
+:root[data-theme="dark"] .dot.now{background:var(--yellow);border-color:var(--yellow)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .dot.now{background:var(--yellow);border-color:var(--yellow)}}
+.dots.sm .dot{width:7px;height:7px;border-width:1.5px}
+
+/* ---------- engine ---------- */
+.engine{display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:22px;align-items:start}
+.case-picker{display:flex;gap:8px;flex-wrap:wrap}
+.case-chip{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 12px;cursor:pointer;text-align:left;display:grid;gap:2px;min-height:44px}
+.case-chip b{font-size:13px}
+.case-chip span{font-size:11.5px;color:var(--ink-2)}
+.case-chip[aria-pressed="true"]{border-color:var(--strong);box-shadow:inset 0 0 0 1px var(--strong)}
+.case-chip[disabled]{opacity:.5;cursor:not-allowed}
+.player{padding:20px;display:grid;gap:16px}
+.pl-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.pl-meta{font-size:12.5px;color:var(--ink-2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pl-num{font-family:var(--font-display);font-weight:700;font-size:20px;text-transform:uppercase}
+.pl-status{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:12px;background:var(--card)}
+.pl-status small{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.clues{display:grid;gap:10px}
+.clue{border-radius:14px;padding:14px 16px;background:var(--card);display:grid;gap:4px}
+.clue.new{background:var(--surface);border:1.5px solid var(--strong)}
+.clue.enter{animation:enter .45s cubic-bezier(.2,.7,.2,1)}
+@keyframes enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.clue-h{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.clue-h .eyebrow{color:var(--ink-2)}
+.clue p{font-size:15px}
+.question{font-family:var(--font-display);font-weight:600;font-size:17px}
+.opts{display:grid;gap:8px;border:0;margin:0;padding:0}
+.opt{position:relative;display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer;font-weight:500;transition:border-color .15s,background .15s}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .key{width:28px;height:28px;border-radius:9px;background:var(--card);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.opt:hover:not(.struck){border-color:var(--ink-3)}
+.opt:has(input:checked){border-color:var(--strong);box-shadow:inset 0 0 0 1px var(--strong)}
+.opt:has(input:checked) .key{background:var(--strong);color:#fff}
+.opt:has(input:focus-visible){outline:3px solid var(--yellow);outline-offset:2px}
+.opt.struck{cursor:not-allowed;color:var(--ink-3);background:var(--card);border-style:dashed}
+.opt.struck .lbl{text-decoration:line-through}
+.opt .tried{margin-left:auto;font-size:11.5px;color:var(--red);font-weight:600;display:flex;gap:4px;align-items:center}
+.feedback{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;font-size:14px}
+.feedback.bad{background:var(--red-soft)}
+.feedback.bad .ico{color:var(--red)}
+.feedback b{display:block}
+.result-hero{border-radius:16px;padding:20px;text-align:center;display:grid;gap:8px;justify-items:center}
+.result-hero.win{background:var(--teal-soft)}
+.result-hero.lose{background:var(--red-soft)}
+.result-hero h3{font-size:26px;text-transform:uppercase;font-weight:700}
+.result-hero .ans{font-family:var(--font-display);font-weight:600;font-size:20px}
+.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin-top:6px}
+.result-stats div{background:var(--surface);border-radius:10px;padding:8px;display:grid;gap:2px;justify-items:center}
+.result-stats small{font-size:11px;color:var(--ink-2)}
+.result-stats b{font-variant-numeric:tabular-nums;font-size:16px}
+.review{display:grid;gap:16px}
+.review h4{font-size:12px;font-family:var(--font-mono);font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.review ul,.review ol{margin:0;padding-left:18px;display:grid;gap:5px;font-size:14px}
+.path{list-style:none;padding:0!important}
+.path li{display:grid;grid-template-columns:70px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--card)}
+.diff{display:grid;gap:8px}
+.diff div{background:var(--card);border-radius:10px;padding:10px 12px;font-size:14px}
+.ref{font-size:13.5px}
+.share{font-family:var(--font-mono);font-size:13px;white-space:pre;background:var(--strong);color:#fff;border-radius:12px;padding:14px;line-height:1.6;overflow-x:auto}
+.inspector{display:grid;gap:16px;min-width:0}
+.sm-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:12px}
+.sm-wrap svg{display:block;min-width:640px;width:100%;height:auto}
+.sm-node rect{fill:var(--card);stroke:var(--line);stroke-width:1.2;transition:fill .3s,stroke .3s}
+.sm-node text{fill:var(--ink-2);font-family:var(--font-mono);font-size:10.5px;font-weight:500}
+.sm-node.trail rect{fill:var(--yellow-soft);stroke:var(--yellow)}
+.sm-node.trail text{fill:var(--ink)}
+.sm-node.on rect{fill:var(--strong);stroke:var(--strong)}
+.sm-node.on text{fill:#fff}
+.sm-node.end-ok.on rect{fill:var(--teal);stroke:var(--teal)}
+.sm-node.end-bad.on rect{fill:var(--red);stroke:var(--red)}
+.sm-edge{stroke:var(--ink-3);stroke-width:1.3;fill:none}
+.sm-lbl{fill:var(--ink-3);font-family:var(--font-body);font-size:10px}
+.sm-arrow{fill:var(--ink-3)}
+.vars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.vars div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.vars small{display:block;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.vars b{font-variant-numeric:tabular-nums;font-size:15px;overflow-wrap:anywhere}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-family:var(--font-mono);font-size:12px}
+.log li{display:grid;grid-template-columns:auto 1fr;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.log .ev{font-weight:500}
+.log .ev.CORRECT{color:var(--teal)}
+.log .ev.FAILED,.log .ev.NEXT_STAGE,.log .ev.STAY_ON_LAST{color:var(--red)}
+.rule{display:flex;gap:12px;align-items:flex-start;font-size:14px}
+
+/* ---------- builder ---------- */
+.builder{display:grid;grid-template-columns:240px minmax(0,1fr) 300px;gap:18px;align-items:start}
+.b-steps{position:sticky;top:120px;display:grid;gap:4px}
+.b-step{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;font-weight:600;font-size:13.5px;text-decoration:none;color:var(--ink)}
+.b-step:hover{background:var(--card)}
+.b-step small{font-weight:500;font-size:12px;color:var(--ink-2);display:flex;gap:4px;align-items:center}
+.save-state{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink-2);padding:8px 12px}
+.save-state i{width:8px;height:8px;border-radius:50%;background:var(--teal);display:block}
+.save-state.saving i{background:var(--yellow)}
+.b-main{display:grid;gap:18px;min-width:0}
+.b-sec{padding:20px;display:grid;gap:14px;scroll-margin-top:130px}
+.b-sec>h3{font-size:15px;text-transform:uppercase;letter-spacing:.03em}
+.field{display:grid;gap:6px}
+.field label,.field .lab{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.field small{font-size:12px;color:var(--ink-3)}
+.inp{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;min-height:42px}
+textarea.inp{min-height:76px;resize:vertical;line-height:1.5}
+.inp:focus{outline:none;border-color:var(--strong);box-shadow:0 0 0 3px color-mix(in srgb,var(--yellow) 45%,transparent)}
+.f-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.stepper button{width:42px;height:42px;border:0;background:none;cursor:pointer;font-size:18px;font-weight:600}
+.stepper button:hover{background:var(--card)}
+.stepper output{min-width:110px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums;display:flex;gap:6px;align-items:center;justify-content:center}
+.toggle{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:14px}
+.toggle input{width:40px;height:22px;appearance:none;background:var(--line);border-radius:999px;position:relative;cursor:pointer;transition:background .2s;flex:none}
+.toggle input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle input:checked{background:var(--teal)}
+.toggle input:checked::after{transform:translateX(18px)}
+.stage{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+.stage-h{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);flex-wrap:wrap}
+.stage-h .num{font-family:var(--font-display);font-weight:700;font-size:13px;text-transform:uppercase;background:var(--strong);color:#fff;border-radius:8px;padding:3px 9px}
+.stage-h .inp{flex:1 1 160px;min-height:34px;padding:6px 10px}
+.stage-h .acts{display:flex;gap:4px;margin-left:auto}
+.stage-b{padding:14px;display:grid;gap:12px}
+.optrow{display:grid;grid-template-columns:28px 1fr auto auto;gap:8px;align-items:center}
+.optrow .key{width:28px;height:28px;border-radius:8px;background:var(--card);display:grid;place-items:center;font-weight:700;font-size:12px}
+.optrow .inp{min-height:38px;padding:7px 10px}
+.correct-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 10px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink-2);min-height:36px;white-space:nowrap}
+.correct-btn[aria-checked="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+.add-row{border:1.5px dashed var(--line);background:none;border-radius:12px;padding:10px;font-weight:600;color:var(--ink-2);cursor:pointer;display:flex;gap:6px;justify-content:center;align-items:center;min-height:44px}
+.add-row:hover{border-color:var(--ink-3);color:var(--ink)}
+.refrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+.b-ready{position:sticky;top:120px;padding:18px;display:grid;gap:14px}
+.b-ready h3{font-size:14px;text-transform:uppercase}
+.issues{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.issues li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.4}
+.issues .ico{width:16px;height:16px;margin-top:2px}
+.issues .e .ico{color:var(--red)}
+.issues .w .ico{color:#B98900}
+:root[data-theme="dark"] .issues .w .ico{color:var(--yellow)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .issues .w .ico{color:var(--yellow)}}
+.issues .ok .ico{color:var(--teal)}
+.flow{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-family:var(--font-mono);font-size:10.5px}
+.flow span{padding:3px 7px;border-radius:6px;background:var(--card);color:var(--ink-3)}
+.flow span.on{background:var(--strong);color:#fff}
+.flow em{font-style:normal;color:var(--ink-3)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--strong);color:#fff;padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:50;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- database ---------- */
+.db{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+.db-groups{display:grid;gap:14px}
+.db-group{display:grid;gap:10px}
+.db-group-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.db-group-h h3{font-size:14px;text-transform:uppercase;letter-spacing:.04em}
+.db-tables{display:flex;flex-wrap:wrap;gap:8px}
+.tbl{font-family:var(--font-mono);font-size:12.5px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;cursor:pointer;display:flex;gap:8px;align-items:center;min-height:40px}
+.tbl:hover{border-color:var(--ink-3)}
+.tbl[aria-pressed="true"]{background:var(--strong);color:#fff;border-color:var(--strong)}
+.tbl i{width:8px;height:8px;border-radius:2px;display:block;flex:none}
+.db-detail{position:sticky;top:120px;padding:20px;display:grid;gap:14px}
+.db-detail h3{font-family:var(--font-mono);font-size:18px;font-weight:500;text-transform:none}
+.cols{width:100%;border-collapse:collapse;font-size:12.5px}
+.cols td{padding:7px 6px;border-top:1px solid var(--line);vertical-align:top}
+.cols td:first-child{font-family:var(--font-mono);white-space:nowrap}
+.cols td:nth-child(2){font-family:var(--font-mono);color:var(--ink-3);white-space:nowrap}
+.split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+.split .side{border-radius:var(--r-card);padding:18px;display:grid;gap:8px;align-content:start}
+.split .side.content{background:var(--surface);border:1px solid var(--line)}
+.split .side.game{background:var(--strong);color:var(--on-navy)}
+.split .side.game .muted{color:var(--on-navy-2)}
+.split .wall{display:grid;place-items:center;font-family:var(--font-mono);font-size:11px;color:var(--ink-3);writing-mode:vertical-rl;letter-spacing:.2em}
+.matrix-wrap{overflow-x:auto}
+.matrix{width:100%;border-collapse:collapse;font-size:13.5px;min-width:620px;background:var(--surface);border-radius:var(--r-card);overflow:hidden}
+.matrix th,.matrix td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:center}
+.matrix th{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--ink-3);background:var(--card)}
+.matrix td:first-child,.matrix th:first-child{text-align:left}
+.yes{color:var(--teal);font-weight:700}
+.no{color:var(--ink-3)}
+
+/* ---------- report ---------- */
+.report{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;align-items:start}
+.toc{position:sticky;top:120px;display:grid;gap:2px}
+.toc a{display:flex;gap:10px;padding:7px 10px;border-radius:10px;text-decoration:none;color:var(--ink-2);font-size:13.5px;font-weight:500}
+.toc a:hover{background:var(--card);color:var(--ink)}
+.toc a b{font-family:var(--font-mono);color:var(--red);font-weight:500;width:14px}
+.rep{display:grid;gap:18px;min-width:0}
+.rep section{padding:22px;scroll-margin-top:130px;display:grid;gap:12px}
+.rep h3{font-size:18px;text-transform:uppercase;display:flex;gap:12px;align-items:center}
+.rep h3 .ltr{width:34px;height:34px;border-radius:50%;background:var(--strong);color:#fff;display:grid;place-items:center;font-size:15px;flex:none}
+.rep p,.rep li{max-width:72ch;font-size:15px}
+.rep ul,.rep ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.rep table{width:100%;border-collapse:collapse;font-size:14px}
+.rep td,.rep th{padding:8px 10px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.rep th{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--ink-3);text-transform:uppercase}
+.tbl-wrap{overflow-x:auto}
+.decision{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;background:var(--card);border-radius:14px;padding:14px 16px}
+.decision .n{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--red);line-height:1}
+.code{font-family:var(--font-mono);font-size:12px;white-space:pre;background:var(--card);border-radius:12px;padding:14px;overflow-x:auto;line-height:1.55}
+
+footer{border-top:1px solid var(--line);padding-block:20px 32px;font-size:12.5px;color:var(--ink-2)}
+footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .builder{grid-template-columns:minmax(0,1fr) 280px}
+  .b-steps{display:none}
+}
+@media (max-width:960px){
+  .hero{grid-template-columns:1fr}
+  .phases,.engine,.db,.report{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static;display:flex;overflow-x:auto;gap:6px;padding-bottom:4px;scrollbar-width:thin}
+  .rail-group{display:none}
+  .rail-item{grid-template-columns:auto auto;flex:none}
+  .rail-item .sz{display:none}
+  .db-detail,.toc{position:static}
+  .toc{display:flex;overflow-x:auto;gap:4px}
+  .toc a{flex:none}
+  .bento .tile,.bento .tile.wide{grid-column:span 3}
+  .status-grid{grid-template-columns:1fr}
+  .pd-cols{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .builder{grid-template-columns:minmax(0,1fr)}
+  .b-ready{position:static;order:-1}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .vars{grid-template-columns:repeat(2,1fr)}
+  .bento .tile,.bento .tile.wide{grid-column:span 6}
+  .arch-layer{grid-template-columns:1fr}
+  .f-grid{grid-template-columns:1fr}
+  .split{grid-template-columns:1fr}
+  .split .wall{writing-mode:horizontal-tb}
+  .mk-g4{grid-template-columns:repeat(2,1fr)}
+  .checklist .k{min-width:110px}
+  .phase-detail{padding:16px}
+  .pd-stage{padding:12px}
+  .band-meta{display:none}
+}
+@media (max-width:440px){
+  .optrow{grid-template-columns:24px 1fr auto;}
+  .optrow .del{grid-column:3;grid-row:1}
+  .optrow .correct-btn{grid-column:2 / 4;justify-self:start}
+  .mk-bars .r{grid-template-columns:80px 1fr 32px}
+  .result-stats{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="band">
+  <div class="wrap">
+    <div class="band-row">
+      <div class="wordmark">
+        <span class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.9 4.5 6.6 4.5c2.1 0 3.6 1.2 5.4 3.1 1.8-1.9 3.3-3.1 5.4-3.1 3.7 0 5.7 3.9 4.2 7.3C19.5 16.4 12 21 12 21z" fill="#E53935"/></svg></span>
+        <span>WISECASES <small>by WiseAitechs</small></span>
+      </div>
+      <div class="band-meta">
+        <span class="chip-dark">Milestone <b>0</b> · architecture review</span>
+        <span class="chip-dark">repo: <b>empty</b> · no commits</span>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Blueprint sections" id="tabs">
+      <span class="tab-ind" id="tabInd" aria-hidden="true"></span>
+      <button class="tab" role="tab" id="t-overview" aria-controls="overview" aria-selected="true">Overview</button>
+      <button class="tab" role="tab" id="t-phases" aria-controls="phases" aria-selected="false" tabindex="-1">Phases</button>
+      <button class="tab" role="tab" id="t-engine" aria-controls="engine" aria-selected="false" tabindex="-1">Live engine</button>
+      <button class="tab" role="tab" id="t-builder" aria-controls="builder" aria-selected="false" tabindex="-1">Case builder</button>
+      <button class="tab" role="tab" id="t-database" aria-controls="database" aria-selected="false" tabindex="-1">Database</button>
+      <button class="tab" role="tab" id="t-report" aria-controls="report" aria-selected="false" tabindex="-1">Report A–J</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ================= OVERVIEW ================= -->
+<section class="panel" id="overview" role="tabpanel" aria-labelledby="t-overview">
+  <div class="hero">
+    <div>
+      <div class="hero-tag"><span>M0</span> Architecture blueprint · for review</div>
+      <h1>Every clue brings you <span class="kw">closer.</span></h1>
+      <p class="lead">WiseCases is a scenario engine for medical, homeopathy and other clinical education. A learner reads a case, answers, and earns a new clue for every wrong guess until they solve it or run out of lives. This page shows how it will be built and what each phase will look like.</p>
+      <div class="hero-ctas">
+        <button class="btn btn-cta" data-goto="engine">Play the working demo</button>
+        <button class="btn btn-line" data-goto="phases">See all 13 phases</button>
+      </div>
+    </div>
+    <div id="heroPhone"></div>
+  </div>
+
+  <div class="stats" aria-label="Plan at a glance">
+    <div class="stat"><b>13</b><span>milestones, M0 to M12</span></div>
+    <div class="stat"><b>23</b><span>database tables, 6 groups</span></div>
+    <div class="stat"><b>5</b><span>roles, enforced by the database</span></div>
+    <div class="stat"><b>0</b><span>cases written into code</span></div>
+  </div>
+
+  <div class="status-grid">
+    <div class="card">
+      <div class="eyebrow">A · Current repository</div>
+      <h2 style="font-size:20px;margin:8px 0 14px">The repository is <span class="kw">empty</span></h2>
+      <ul class="checklist">
+        <li><span class="k">Branch</span><span class="mono" style="font-size:12.5px;overflow-wrap:anywhere">claude/wisecases-architecture-90ek18</span></li>
+        <li><span class="k">Commits</span><span>None yet</span></li>
+        <li><span class="k">Code, packages</span><span>None</span></li>
+        <li><span class="k">Database, auth, hosting</span><span>None configured</span></li>
+        <li><span class="k">Tests, CI</span><span>None</span></li>
+        <li><span class="k">Security issues</span><span>None found. There is nothing to leak.</span></li>
+      </ul>
+      <p class="muted" style="margin-top:14px;font-size:14px">We start clean: nothing to migrate, nothing to break, and the stack in the brief can be used as written.</p>
+    </div>
+    <div class="surface" style="padding:20px">
+      <div class="eyebrow">B · Architecture in one picture</div>
+      <div class="arch" style="margin-top:14px" id="archMini"></div>
+    </div>
+  </div>
+
+  <div class="section-head"><div><div class="eyebrow">Design principles</div><h2>Built as an engine, not a quiz</h2></div></div>
+  <div class="bento">
+    <div class="tile wide spot"><div class="ico-circle" data-ico="cpu"></div><h3>One engine, any number of cases</h3><p>Stages, options, lives and scoring are all rows in the database. Case #1 and Case #5,000 go through the same code. There is no <span class="mono">if (caseId === 1)</span> anywhere.</p></div>
+    <div class="tile wide spot"><div class="ico-circle" data-ico="shield"></div><h3>The server keeps score</h3><p>The browser never receives a correct answer or a future clue early. Lives are stored on the server, so refreshing the page cannot bring a life back.</p></div>
+    <div class="tile spot"><div class="ico-circle" data-ico="split"></div><h3>Content and play kept apart</h3><p>What authors write and what learners did live in separate tables, which keeps analytics clean.</p></div>
+    <div class="tile spot"><div class="ico-circle" data-ico="check"></div><h3>Review before publish</h3><p>Draft, review, publish, archive. Only Admins publish. Each published version is kept as a snapshot.</p></div>
+    <div class="tile spot"><div class="ico-circle" data-ico="phone"></div><h3>Phone first</h3><p>Large tap targets, readable clues, installable as an app, keyboard and screen-reader friendly.</p></div>
+  </div>
+</section>
+
+<!-- ================= PHASES ================= -->
+<section class="panel" id="phases" role="tabpanel" aria-labelledby="t-phases" hidden>
+  <div class="section-head">
+    <div><div class="eyebrow">G · Development milestones</div><h2>What each phase looks like</h2></div>
+    <p class="muted">Pick a milestone to see a preview of the screens it delivers, what you will be able to check, and when it counts as done. Milestones 1 to 5 make up the first MVP.</p>
+  </div>
+  <div class="phases">
+    <div class="rail" role="tablist" aria-label="Milestones" id="rail"></div>
+    <article class="phase-detail beam" id="phaseDetail" aria-live="polite"></article>
+  </div>
+</section>
+
+<!-- ================= ENGINE ================= -->
+<section class="panel" id="engine" role="tabpanel" aria-labelledby="t-engine" hidden>
+  <div class="section-head">
+    <div><div class="eyebrow">D + F · Case engine and player flow</div><h2>Play a case, watch the engine</h2></div>
+    <p class="muted">This is the real engine logic proposed for the app, running in your browser. Answer wrongly on purpose to see a life go, the next clue appear and new options load. Demo content is fictional and unreviewed.</p>
+  </div>
+  <div class="case-picker" id="casePicker" aria-label="Choose a demo case"></div>
+  <div class="engine">
+    <div class="surface player" id="player"></div>
+    <div class="inspector">
+      <div>
+        <div class="eyebrow" style="margin-bottom:8px">Case state machine · live</div>
+        <div class="sm-wrap" id="smWrap"></div>
+      </div>
+      <div class="vars" id="vars"></div>
+      <div class="card rule" id="ruleCard"></div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:8px">Events recorded to <span class="mono">attempt_answers</span></div>
+        <ol class="log" id="log"></ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BUILDER ================= -->
+<section class="panel" id="builder" role="tabpanel" aria-labelledby="t-builder" hidden>
+  <div class="section-head">
+    <div><div class="eyebrow">E · Admin panel</div><h2>Create a case without code</h2></div>
+    <p class="muted">A working sketch of the Case Builder. The sample draft has a deliberate mistake. Fix it using the readiness panel, then press <b>Preview as learner</b> to play your own case in the engine.</p>
+  </div>
+  <div class="builder" id="builderRoot"></div>
+</section>
+
+<!-- ================= DATABASE ================= -->
+<section class="panel" id="database" role="tabpanel" aria-labelledby="t-database" hidden>
+  <div class="section-head">
+    <div><div class="eyebrow">C · Database design</div><h2>23 tables in six groups</h2></div>
+    <p class="muted">Select a table to see its key columns and links. Every table uses UUID keys, timestamps, foreign keys and indexes on the fields the library filters by.</p>
+  </div>
+  <div class="split">
+    <div class="side content"><div class="eyebrow">Content · written by authors</div><b style="font-size:16px">cases → case_stages → stage_options</b><p class="muted" style="font-size:14px">Never contains anything about a particular learner. Frozen into <span class="mono">case_versions</span> on publish.</p></div>
+    <div class="wall" aria-hidden="true">SEPARATE</div>
+    <div class="side game"><div class="eyebrow" style="color:var(--on-navy-2)">Gameplay · what learners did</div><b style="font-size:16px">attempts → attempt_answers</b><p class="muted" style="font-size:14px">Points to the published version that was played, so later edits never rewrite history.</p></div>
+  </div>
+  <div class="db">
+    <div class="db-groups" id="dbGroups"></div>
+    <aside class="surface db-detail" id="dbDetail" aria-live="polite"></aside>
+  </div>
+  <div class="section-head"><div><div class="eyebrow">Authorization</div><h2>Who can do what</h2></div><p class="muted">Checked on the server and again by Row Level Security inside the database. Hiding a menu item is never the only lock.</p></div>
+  <div class="matrix-wrap"><table class="matrix" id="matrix"></table></div>
+</section>
+
+<!-- ================= REPORT ================= -->
+<section class="panel" id="report" role="tabpanel" aria-labelledby="t-report" hidden>
+  <div class="report">
+    <nav class="toc" aria-label="Report sections">
+      <a href="#rA"><b>A</b>Repository status</a><a href="#rB"><b>B</b>Architecture</a><a href="#rC"><b>C</b>Database</a><a href="#rD"><b>D</b>Case engine</a><a href="#rE"><b>E</b>Admin panel</a><a href="#rF"><b>F</b>Player flow</a><a href="#rG"><b>G</b>Milestones</a><a href="#rH"><b>H</b>Files</a><a href="#rI"><b>I</b>Decisions</a><a href="#rJ"><b>J</b>Next action</a>
+    </nav>
+    <div class="rep">
+      <section class="surface" id="rA"><h3><span class="ltr">A</span>Current repository status</h3>
+        <p>The repository is completely empty: one branch, no commits, no files, no package setup, no database, login, hosting, tests or CI. There are no security issues because there is nothing yet to expose. We start clean and can use the recommended stack without replacing anything.</p></section>
+      <section class="surface" id="rB"><h3><span class="ltr">B</span>Proposed architecture</h3>
+        <p>One Next.js application written in TypeScript and styled with Tailwind, hosted on Vercel. Supabase provides the PostgreSQL database, logins, file storage and Row Level Security. Components follow the shadcn/ui pattern used across 21st.dev, restyled in the WiseAitechs brand.</p>
+        <ul>
+          <li><b>One app, clear folders.</b> Cheap to host, easy to hand over, no microservices.</li>
+          <li><b>The server keeps score.</b> Correct answers and future clues never reach the browser early.</li>
+          <li><b>One engine module</b> runs the real player, the admin preview and the tests, so the game rules live in exactly one place.</li>
+          <li><b>Row Level Security</b> is a second lock inside the database: drafts stay hidden even if a page has a bug.</li>
+        </ul>
+        <div class="code">src/app/(public) (learner) admin api
+src/components/ui player builder analytics
+src/lib/engine schemas db auth config
+supabase/migrations seed.sql tests
+tests/unit e2e
+.github/workflows/ci.yml</div></section>
+      <section class="surface" id="rC"><h3><span class="ltr">C</span>Database design</h3>
+        <p>23 tables in six groups: People and access, Taxonomy, Content, Governance, Gameplay, Engagement. Content tables never store anything about a learner. Attempts point at a frozen published snapshot of the case. Optional homeopathy and repertory fields sit in a validated <span class="mono">domain_fields</span> column, so ordinary medical cases don't carry them. The Database tab has the full explorer.</p></section>
+      <section class="surface" id="rD"><h3><span class="ltr">D</span>Case engine design</h3>
+        <ul>
+          <li>Each case sets its own <b>maximum lives</b> and has <b>any number of ordered stages</b>.</li>
+          <li>Each stage has its own clue, question, interaction type and <b>its own answer options</b> (any count).</li>
+          <li>A wrong answer costs the stage's <b>life cost</b> (normally 1) and reveals the next stage. Earlier clues stay visible unless switched off.</li>
+          <li>A correct answer ends the case as a success, with a score from the central scoring rules.</li>
+          <li><b>Zero lives</b> ends the case as failed and opens the full explanation.</li>
+          <li><b>Stages run out but lives remain:</b> the learner stays on the last stage, the wrong option is struck out, and they try again. Authors can switch a case to "end immediately" instead.</li>
+        </ul>
+        <div class="code">score = base × difficulty × clueEfficiency × lifeMultiplier
+clueEfficiency = 1 − 0.5 × (stageSolved − 1) / totalStages
+lifeMultiplier = 0.5 + 0.5 × livesLeft / maxLives</div></section>
+      <section class="surface" id="rE"><h3><span class="ltr">E</span>Admin panel design</h3>
+        <ol>
+          <li>Cases → New case. Fill in title, domain, category, difficulty and lives using plain form fields.</li>
+          <li>Add stages. Type the clue, question and options; click <b>Correct</b> on the right answer. Move, duplicate or delete stages.</li>
+          <li>Write the explanation, differentials and learning points. Homeopathy and repertory domains show their extra fields.</li>
+          <li>Add references and tick each one as verified.</li>
+          <li>The readiness panel lists anything missing in plain words, for example "Stage 3 has no correct answer."</li>
+          <li>Autosave shows Saving…, Saved or Save failed.</li>
+          <li>Preview as learner, submit for review, then an Admin publishes.</li>
+        </ol></section>
+      <section class="surface" id="rF"><h3><span class="ltr">F</span>Player flow</h3>
+        <ol>
+          <li>Open the case. The server checks it is published and starts an attempt, for a signed-in user or a guest.</li>
+          <li>Read Stage 1, pick an option, submit.</li>
+          <li>Wrong: one life is lost (shown with an icon and text), and the next clue appears with new options.</li>
+          <li>Correct: the success screen shows the answer, clues used, lives left and score.</li>
+          <li>Zero lives: the answer is revealed with the full explanation.</li>
+          <li>Both endings lead to the reasoning review and a share card that never shows the answer.</li>
+        </ol></section>
+      <section class="surface" id="rG"><h3><span class="ltr">G</span>Development milestones</h3>
+        <div class="tbl-wrap"><table id="msTable"></table></div></section>
+      <section class="surface" id="rH"><h3><span class="ltr">H</span>Files to create or modify</h3>
+        <p><b>Created in Milestone 0:</b> <span class="mono">docs/MILESTONE-0-REPORT.md</span>, <span class="mono">docs/blueprint/index.html</span> (this page), <span class="mono">README.md</span>.</p>
+        <p><b>Milestone 1 will create:</b> package and tool config (<span class="mono">package.json</span>, <span class="mono">tsconfig.json</span>, <span class="mono">next.config.ts</span>, ESLint, Prettier, Tailwind), <span class="mono">.gitignore</span>, <span class="mono">.env.example</span>, the app shell, <span class="mono">src/components/ui/*</span>, player building blocks, <span class="mono">src/lib/engine/*</span> with tests, Vitest and Playwright config, <span class="mono">.github/workflows/ci.yml</span>, and the documentation set. Nothing existing is modified because the repository was empty.</p>
+        <p><b>Milestone 2 adds:</b> <span class="mono">supabase/migrations/*.sql</span>, <span class="mono">supabase/seed.sql</span>, RLS tests, <span class="mono">src/lib/db/*</span>, <span class="mono">src/lib/auth/*</span>, <span class="mono">DATABASE.md</span>.</p></section>
+      <section class="surface" id="rI"><h3><span class="ltr">I</span>Decisions that need you</h3>
+        <div class="decision"><span class="n">1</span><div><b>Licence.</b> Private and proprietary (recommended for a commercial product), or open source such as MIT? Case content lives in the database either way, not in the code.</div></div>
+        <div class="decision"><span class="n">2</span><div><b>Accounts.</b> Who owns the Supabase and Vercel accounts? You create both (free tiers are enough to start) and add the keys through environment settings, never in chat or Git.</div></div>
+        <div class="decision"><span class="n">3</span><div><b>Google sign-in in the MVP?</b> It needs a Google Cloud OAuth client under your organisation. Email and guest play work without it.</div></div>
+        <div class="decision"><span class="n">4</span><div><b>Who publishes at launch?</b> Only you as Super Admin, or named reviewers? This sets how strict review is on day one.</div></div>
+        <p class="muted">Everything else uses the defaults in this report: stay on the last stage when stages run out, previous clues stay visible, the answer is not revealed after a wrong guess, guests can play public cases, and English only to start (a language field is ready).</p></section>
+      <section class="surface" id="rJ"><h3><span class="ltr">J</span>Next action</h3>
+        <p><b>Start Milestone 1, the project foundation.</b> Set up Next.js, TypeScript and Tailwind, the WiseAitechs component library and CI. Write the case engine module and its tests first, because the player, the admin preview and analytics all depend on it. Milestone 1 does not need Supabase accounts, so it can start while you answer the decisions above.</p>
+        <p class="muted">Work stops here until you have reviewed the architecture.</p></section>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><span>WiseCases is intended for medical education and learning. It is not a substitute for professional medical judgment, diagnosis or treatment.</span><span>Demo cases on this page are fictional and unreviewed. References are placeholders.</span></div></footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let uid=0; const nid=p=>(p||'id')+(++uid);
+
+/* ---------- icons ---------- */
+const P={
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  alert:'<path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v4.5M12 17.5v.01"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+  up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
+  down:'<path d="M12 5v14M6 13l6 6 6-6"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  play:'<path d="M7 5l12 7-12 7V5z"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  cpu:'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>',
+  shield:'<path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+  split:'<path d="M12 3v18M4 7h5M4 12h5M4 17h5M15 7h5M15 12h5M15 17h5"/>',
+  phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+  arrowL:'<path d="M15 6l-6 6 6 6"/>',
+  arrowR:'<path d="M9 6l6 6-6 6"/>',
+  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  dup:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V5a1 1 0 011-1h11"/>'
+};
+const ico=(n,cls='ico')=>`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]||''}</svg>`;
+$$('[data-ico]').forEach(el=>el.innerHTML=ico(el.dataset.ico));
+const HEART='M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.9 4.5 6.6 4.5c2.1 0 3.6 1.2 5.4 3.1 1.8-1.9 3.3-3.1 5.4-3.1 3.7 0 5.7 3.9 4.2 7.3C19.5 16.4 12 21 12 21z';
+function hearts(lives,max,opts={}){
+  let s='';
+  for(let i=0;i<max;i++){
+    const full=i<lives, pop=opts.pop===i;
+    s+=`<svg class="heart ${full?'full':'empty'}${pop?' pop':''}" viewBox="0 0 24 24" aria-hidden="true"><path d="${HEART}" stroke-width="1.8"/></svg>`;
+  }
+  return `<span class="hearts${opts.sm?' sm':''}" role="img" aria-label="${lives} of ${max} lives left">${s}</span>`;
+}
+function dots(total,current,opts={}){
+  let s='';
+  for(let i=0;i<total;i++) s+=`<span class="dot ${i<current?'done':i===current?'now':''}"></span>`;
+  return `<span class="dots${opts.sm?' sm':''}" role="img" aria-label="Clue ${Math.min(current+1,total)} of ${total}">${s}</span>`;
+}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2400)}
+
+/* ---------- tabs ---------- */
+const tabs=$$('.tab'); const ind=$('#tabInd');
+function placeInd(){const a=tabs.find(t=>t.getAttribute('aria-selected')==='true');if(!a)return;ind.style.width=a.offsetWidth+'px';ind.style.transform=`translateX(${a.offsetLeft}px)`}
+function openTab(id,focus){
+  tabs.forEach(t=>{const on=t.getAttribute('aria-controls')===id;t.setAttribute('aria-selected',on);t.tabIndex=on?0:-1;if(on&&focus)t.focus()});
+  $$('[role="tabpanel"]').forEach(p=>p.hidden=p.id!==id);
+  placeInd();
+  try{history.replaceState(null,'','#'+id)}catch(e){}
+  const a=tabs.find(t=>t.getAttribute('aria-controls')===id); if(a) a.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>{openTab(t.getAttribute('aria-controls'));window.scrollTo({top:0})});
+  t.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const n=tabs[(i+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];openTab(n.getAttribute('aria-controls'),true)}
+  });
+});
+document.addEventListener('click',e=>{const g=e.target.closest('[data-goto]');if(g){openTab(g.dataset.goto);window.scrollTo({top:0})}});
+window.addEventListener('resize',placeInd);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(placeInd);
+
+/* spotlight */
+document.addEventListener('pointermove',e=>{const s=e.target.closest&&e.target.closest('.spot');if(!s)return;const r=s.getBoundingClientRect();s.style.setProperty('--mx',(e.clientX-r.left)+'px');s.style.setProperty('--my',(e.clientY-r.top)+'px')});
+
+/* ---------- architecture mini ---------- */
+const ARCH=`
+  <div class="arch-layer"><h4>Browser · PWA</h4><div class="pills"><span class="pill">Public site</span><span class="pill">Learner app</span><span class="pill">Admin panel</span><span class="pill">Installable</span></div></div>
+  <div class="arch-arrow">▼ HTTPS</div>
+  <div class="arch-layer navy"><h4>Next.js on Vercel</h4><div class="pills"><span class="pill">Pages</span><span class="pill">Server actions</span><span class="pill hl">Case engine</span><span class="pill">Zod validation</span><span class="pill">Scoring rules</span></div></div>
+  <div class="arch-arrow">▼ typed queries · RLS</div>
+  <div class="arch-layer"><h4>Supabase</h4><div class="pills"><span class="pill">PostgreSQL</span><span class="pill">Row Level Security</span><span class="pill">Auth · guests</span><span class="pill">Storage</span></div></div>`;
+$('#archMini').innerHTML=ARCH;
+
+/* ---------- demo cases (fictional, unreviewed) ---------- */
+const CASES=[
+ {id:'derm',number:'0124',title:'The ring-shaped rash',domain:'Medical Diagnosis',category:'Dermatology',difficulty:'Intermediate',maxLives:5,onStagesExhausted:'stay',revealPrevious:true,
+  answer:'Tinea corporis',
+  stages:[
+   {title:'Presentation',clue:'A 24-year-old man has an itchy rash on his left forearm. It has been slowly getting bigger for three weeks.',question:'What is the most likely diagnosis?',options:['Psoriasis','*Tinea corporis','Nummular eczema','Scabies']},
+   {title:'History',clue:'He adopted a kitten a month ago. There is a single lesion and nobody at home is itching.',question:'What is the most likely diagnosis now?',options:['*Tinea corporis','Granuloma annulare','Nummular eczema','Pityriasis rosea']},
+   {title:'Examination',clue:'A 4 cm ring-shaped plaque with a raised, scaly advancing edge and a clearer centre.',question:'Which diagnosis fits best?',options:['Granuloma annulare','*Tinea corporis','Erythema migrans','Psoriasis']},
+   {title:'Investigation',clue:'A skin scraping examined with potassium hydroxide (KOH) shows branching, septate hyphae.',question:'Final diagnosis?',options:['*Tinea corporis','Erythema migrans','Granuloma annulare']}
+  ],
+  keyClues:['Slowly expanding, itchy single lesion','New kitten: likely animal source of a dermatophyte','Ring shape with scaly advancing edge and central clearing','KOH preparation shows fungal hyphae'],
+  why:'A single itchy annular plaque with an active scaly border and central clearing, after contact with a young cat, is the classic picture of a dermatophyte infection of the body skin. Seeing hyphae on KOH microscopy confirms a fungal cause.',
+  differentials:[['Granuloma annulare','Also ring-shaped, but usually not scaly and not itchy, and KOH is negative.'],['Nummular eczema','Coin-shaped and itchy, but the whole plaque is involved, with no central clearing.'],['Psoriasis','Well-defined plaques with silvery scale, usually on elbows and knees, rarely clearing centrally.'],['Erythema migrans','Expanding redness after a tick bite, typically without scale.'],['Pityriasis rosea','Starts with a herald patch, then many oval patches over the trunk.'],['Scabies','Intense itch, worse at night, burrows in finger webs, household members often affected.']],
+  learning:['Scale at the edge of a ring-shaped lesion should prompt a KOH scraping.','Ask about pets and contact sports in any ring-shaped rash.','Avoid steroid-only creams before ruling out fungal infection; they can mask it.'],
+  refs:['Placeholder: standard dermatology textbook chapter on superficial fungal infections. Reviewer to add and verify.']},
+ {id:'mm',number:'0241',title:'Stiff on rising',domain:'Materia Medica',category:'Musculoskeletal',difficulty:'Easy',maxLives:3,onStagesExhausted:'stay',revealPrevious:true,
+  answer:'Rhus toxicodendron',
+  stages:[
+   {title:'Presentation',clue:'A 45-year-old man has aching, stiff joints after getting soaked in cold rain on a camping trip.',question:'Which remedy is most indicated?',options:['Bryonia alba','*Rhus toxicodendron','Arnica montana','Ledum palustre']},
+   {title:'Modalities',clue:'The pain is worst when he first moves after resting and eases as he keeps moving.',question:'Which remedy fits these modalities?',options:['Bryonia alba','Causticum','*Rhus toxicodendron','Arnica montana']},
+   {title:'Generals',clue:'He is restless at night and cannot stay in one position. Warmth helps; cold, damp weather makes it worse.',question:'Final remedy?',options:['Arsenicum album','*Rhus toxicodendron','Bryonia alba']}
+  ],
+  keyClues:['Complaints after getting wet and chilled','Worse on first motion, better with continued motion','Restlessness, better from warmth, worse cold damp'],
+  why:'Stiffness after exposure to cold and wet, worse on beginning to move and better from continued motion, with restlessness and relief from warmth, are keynotes taught for Rhus toxicodendron.',
+  differentials:[['Bryonia alba','Worse from any motion, better from complete rest and firm pressure.'],['Arnica montana','Sore, bruised feeling after injury or overexertion.'],['Ledum palustre','Puncture wounds; joint pains better from cold applications.'],['Causticum','Contractures and weakness, often better in damp weather.'],['Arsenicum album','Anxious restlessness with burning pains, better from warmth.']],
+  learning:['Modalities (what makes it better or worse) often separate similar remedies.','First-motion aggravation with continued-motion amelioration is a classic contrast with Bryonia.'],
+  refs:['Placeholder: Boericke, Pocket Manual of Homoeopathic Materia Medica, Rhus toxicodendron. Reviewer to verify edition and page.']}
+];
+function normCase(c){
+  return Object.assign({},c,{stages:c.stages.map((st,si)=>({lifeCost:1,...st,options:st.options.map((o,oi)=>typeof o==='string'?{id:`s${si}o${oi}`,label:o.replace(/^\*/,''),correct:o.startsWith('*')}:o)}))});
+}
+const ENGINE_CASES=CASES.map(normCase);
+
+/* ---------- engine (pure; mirrors src/lib/engine) ---------- */
+const SCORING={base:1000,difficulty:{Easy:1,Intermediate:1.25,Hard:1.5},clueWeight:.5,lifeWeight:.5};
+function maxScore(c){return Math.round(SCORING.base*(SCORING.difficulty[c.difficulty]||1))}
+function scoreFor(c,stageIndex,lives){
+  const clueEff=1-SCORING.clueWeight*(stageIndex/c.stages.length);
+  const lifeMul=(1-SCORING.lifeWeight)+SCORING.lifeWeight*(lives/c.maxLives);
+  return Math.round(maxScore(c)*clueEff*lifeMul);
+}
+function newAttempt(c){return {status:'NOT_STARTED',stageIndex:0,lives:c.maxLives,struck:{},path:[],score:0,event:null}}
+function startAttempt(s){return {...s,status:'IN_PROGRESS',event:'STARTED',startedAt:Date.now()}}
+function applyAnswer(s,c,optionId){
+  if(s.status!=='IN_PROGRESS') return s;
+  const stage=c.stages[s.stageIndex], opt=stage.options.find(o=>o.id===optionId);
+  if(!opt||(s.struck[s.stageIndex]||[]).includes(optionId)) return s;
+  const path=[...s.path,{stage:s.stageIndex,label:opt.label,correct:opt.correct}];
+  if(opt.correct) return {...s,path,status:'COMPLETED_SUCCESS',score:scoreFor(c,s.stageIndex,s.lives),event:'CORRECT',endedAt:Date.now()};
+  const lives=Math.max(0,s.lives-(stage.lifeCost??1));
+  if(lives===0) return {...s,path,lives,status:'COMPLETED_FAILED',score:0,event:'FAILED',endedAt:Date.now()};
+  if(s.stageIndex<c.stages.length-1) return {...s,path,lives,stageIndex:s.stageIndex+1,event:'NEXT_STAGE'};
+  if(c.onStagesExhausted==='fail') return {...s,path,lives,status:'COMPLETED_FAILED',score:0,event:'FAILED',endedAt:Date.now()};
+  const struck={...s.struck,[s.stageIndex]:[...(s.struck[s.stageIndex]||[]),optionId]};
+  return {...s,path,lives,struck,event:'STAY_ON_LAST'};
+}
+
+/* ---------- state machine svg ---------- */
+const SM_NODES={
+  NS:{x:80,y:50,t:'NOT_STARTED'}, IP:{x:290,y:50,t:'IN_PROGRESS'}, AS:{x:520,y:50,t:'ANSWER_SUBMITTED'},
+  CS:{x:745,y:50,t:'COMPLETED_SUCCESS',cls:'end-ok'}, LL:{x:520,y:160,t:'WRONG · LIFE LOST'},
+  NX:{x:330,y:160,t:'NEXT_STAGE'}, CF:{x:745,y:160,t:'COMPLETED_FAILED',cls:'end-bad'}, SL:{x:520,y:262,t:'STAY_ON_LAST_STAGE'}
+};
+function smSVG(){
+  const W=140,H=36;
+  const node=(k)=>{const n=SM_NODES[k];return `<g class="sm-node ${n.cls||''}" id="sm-${k}"><rect x="${n.x-W/2}" y="${n.y-H/2}" width="${W}" height="${H}" rx="10"/><text x="${n.x}" y="${n.y+3.5}" text-anchor="middle">${n.t}</text></g>`};
+  const e=(d,lbl,lx,ly,anchor='middle')=>`<path class="sm-edge" d="${d}" marker-end="url(#arr)"/>${lbl?`<text class="sm-lbl" x="${lx}" y="${ly}" text-anchor="${anchor}">${lbl}</text>`:''}`;
+  return `<svg viewBox="0 0 830 300" role="img" aria-label="Case state machine: not started, in progress, answer submitted, then completed success if correct; if wrong a life is lost and the case fails at zero lives, moves to the next stage, or stays on the last stage.">
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="sm-arrow" d="M0 0L10 5L0 10z"/></marker></defs>
+  ${e('M150 50 H218','start',184,42)}
+  ${e('M360 50 H448','submit',404,42)}
+  ${e('M590 50 H673','correct',632,42)}
+  ${e('M520 68 V140','wrong',528,108,'start')}
+  ${e('M590 160 H673','lives = 0',632,152)}
+  ${e('M450 160 H402','next stage',426,152)}
+  ${e('M330 142 V70','reveal clue',338,110,'start')}
+  ${e('M520 178 V242','last stage, lives > 0',528,214,'start')}
+  ${e('M450 262 H245 V70','retry, wrong pick struck out',345,280)}
+  ${Object.keys(SM_NODES).map(node).join('')}
+  </svg>`;
+}
+$('#smWrap').innerHTML=smSVG();
+function smHighlight(on,trail=[]){
+  Object.keys(SM_NODES).forEach(k=>{const g=$('#sm-'+k);g.classList.toggle('on',k===on);g.classList.toggle('trail',trail.includes(k))});
+}
+
+/* ---------- player ---------- */
+const ENG={c:null,s:null,log:[],popHeart:null,preview:false,draft:null};
+function renderPicker(){
+  const items=ENGINE_CASES.map(c=>({id:c.id,t:'DEMO · '+c.title,s:`${c.category} · ${c.maxLives} lives · ${c.stages.length} stages`}));
+  items.push({id:'draft',t:'Your builder draft',s:ENG.draft?`${ENG.draft.maxLives} lives · ${ENG.draft.stages.length} stages`:'Use Preview in the Case builder',dis:!ENG.draft});
+  $('#casePicker').innerHTML=items.map(i=>`<button class="case-chip" data-case="${i.id}" aria-pressed="${ENG.c&&ENG.c.id===i.id}" ${i.dis?'disabled':''}><b>${esc(i.t)}</b><span>${esc(i.s)}</span></button>`).join('');
+}
+$('#casePicker').addEventListener('click',e=>{const b=e.target.closest('[data-case]');if(!b||b.disabled)return;loadCase(b.dataset.case==='draft'?ENG.draft:ENGINE_CASES.find(c=>c.id===b.dataset.case))});
+function loadCase(c){ENG.c=c;ENG.s=newAttempt(c);ENG.log=[];ENG.popHeart=null;renderPicker();renderPlayer();renderInspector()}
+
+function renderPlayer(){
+  const c=ENG.c,s=ENG.s,root=$('#player');
+  const head=`<div class="pl-top"><div><div class="pl-meta"><span>${esc(c.domain)} · ${esc(c.category)}</span><span class="badge">${esc(c.difficulty)}</span>${c.preview?'<span class="badge warn">PREVIEW · not recorded</span>':'<span class="badge">DEMO</span>'}</div><div class="pl-num">Case #${esc(c.number)}</div></div></div>
+  <div class="pl-status">${hearts(s.lives,c.maxLives,{pop:ENG.popHeart})}<small>${s.lives} of ${c.maxLives} lives</small>${dots(c.stages.length,s.status==='COMPLETED_SUCCESS'||s.status==='COMPLETED_FAILED'?s.stageIndex+1:s.stageIndex)}<small>Clue ${s.stageIndex+1} of ${c.stages.length}</small></div>`;
+  if(s.status==='NOT_STARTED'){
+    root.innerHTML=head+`<div class="clue"><div class="eyebrow">Before you start</div><h3 style="font-size:20px;margin:4px 0 6px">${esc(c.title)}</h3><p class="muted" style="font-size:14px">${c.stages.length} clues and ${c.maxLives} lives. Each wrong answer costs a life and reveals the next clue. Fewer clues and more lives left give a higher score.</p></div><button class="btn btn-cta" id="startBtn">${ico('play')} Start case</button>`;
+    $('#startBtn').onclick=()=>{ENG.s=startAttempt(ENG.s);ENG.popHeart=null;renderPlayer();renderInspector();const h=$('#clueNew');if(h)h.focus()};
+    return;
+  }
+  if(s.status==='IN_PROGRESS'){
+    const from=c.revealPrevious?0:s.stageIndex;
+    let clues='';
+    for(let i=from;i<=s.stageIndex;i++){
+      const st=c.stages[i],isNew=i===s.stageIndex;
+      clues+=`<article class="clue${isNew?' new':''}${isNew&&ENG.s.event==='NEXT_STAGE'?' enter':''}"><div class="clue-h"><span class="eyebrow">Clue ${i+1} · ${esc(st.title||'Stage '+(i+1))}</span>${isNew&&i>0&&s.event==='NEXT_STAGE'?'<span class="badge navy">New clue</span>':''}</div><p ${isNew?'id="clueNew" tabindex="-1"':''}>${esc(st.clue)}</p></article>`;
+    }
+    const st=c.stages[s.stageIndex],struck=s.struck[s.stageIndex]||[];
+    const opts=st.options.map((o,i)=>{const k=struck.includes(o.id);return `<label class="opt${k?' struck':''}"><input type="radio" name="ans" value="${o.id}" ${k?'disabled':''}><span class="key">${String.fromCharCode(65+i)}</span><span class="lbl">${esc(o.label)}</span>${k?`<span class="tried">${ico('x','ico')} Tried</span>`:''}</label>`}).join('');
+    let fb='';
+    if(s.event==='NEXT_STAGE') fb=`<div class="feedback bad" role="status">${ico('x')}<div><b>Not quite. One life lost.</b>Clue ${s.stageIndex+1} is now showing, with new answer options.</div></div>`;
+    if(s.event==='STAY_ON_LAST') fb=`<div class="feedback bad" role="status">${ico('x')}<div><b>Not quite. One life lost.</b>That was the last clue. Your choice is crossed out; try again.</div></div>`;
+    root.innerHTML=head+fb+`<div class="clues">${clues}</div><form id="ansForm" class="opts-form" style="display:grid;gap:12px"><div class="question" id="qText">${esc(st.question)}</div><fieldset class="opts" aria-labelledby="qText">${opts}</fieldset><button class="btn btn-navy" id="submitBtn" type="submit" disabled>Submit answer</button></form>`;
+    const form=$('#ansForm');
+    form.addEventListener('change',()=>{$('#submitBtn').disabled=!form.querySelector('input:checked')});
+    form.addEventListener('submit',ev=>{ev.preventDefault();const v=form.querySelector('input:checked');if(!v)return;submit(v.value)});
+    return;
+  }
+  renderResult(head);
+}
+function submit(optionId){
+  const before=ENG.s, c=ENG.c, st=c.stages[before.stageIndex];
+  const after=applyAnswer(before,c,optionId);
+  if(after===before) return;
+  const opt=st.options.find(o=>o.id===optionId);
+  ENG.popHeart=after.lives<before.lives?after.lives:null;
+  ENG.log.unshift({ev:after.event,txt:`Stage ${before.stageIndex+1} · “${opt.label}” · ${opt.correct?'correct':'wrong'} · lives ${before.lives}→${after.lives}${after.event==='CORRECT'?' · score '+after.score:''}`});
+  ENG.s=after; renderPlayer(); renderInspector();
+  const f=$('#clueNew')||$('#resultHead'); if(f) f.focus({preventScroll:false});
+}
+function shareText(c,s){
+  const used=s.stageIndex+1, stars=s.status==='COMPLETED_SUCCESS'?Math.max(1,Math.round(5*s.score/maxScore(c))):0;
+  return `WiseCases #${c.number}\n${s.status==='COMPLETED_SUCCESS'?'🎯':'💔'} ${s.status==='COMPLETED_SUCCESS'?used:'–'}/${c.stages.length} clues\n${'❤️'.repeat(s.lives)}${'🤍'.repeat(c.maxLives-s.lives)}\n${stars?'⭐'.repeat(stars):'No stars this time'}`;
+}
+function renderResult(head){
+  const c=ENG.c,s=ENG.s,win=s.status==='COMPLETED_SUCCESS',root=$('#player');
+  const byStage=c.stages.map((st,i)=>({i,st,picks:s.path.filter(p=>p.stage===i)}));
+  const pathHtml=byStage.map(({i,st,picks})=>picks.length?picks.map(p=>`<li><span class="mono" style="font-size:12px">Stage ${i+1}</span><span>${esc(p.label)}</span>${p.correct?`<span class="badge ok">${ico('check','ico')} Correct</span>`:`<span class="badge bad">${ico('x','ico')} Wrong</span>`}</li>`).join(''):`<li style="opacity:.7"><span class="mono" style="font-size:12px">Stage ${i+1}</span><span class="muted">Not reached · ${esc(st.clue.slice(0,60))}${st.clue.length>60?'…':''}</span><span class="badge">Unseen</span></li>`).join('');
+  root.innerHTML=head+`
+  <div class="result-hero ${win?'win':'lose'}">
+    <span class="ico-circle" style="background:${win?'var(--teal)':'var(--red)'}">${ico(win?'target':'x')}</span>
+    <h3 id="resultHead" tabindex="-1">${win?'Correct':'Out of lives'}</h3>
+    <div class="muted" style="font-size:13px">${win?'Answer':'The answer was'}</div>
+    <div class="ans">${esc(c.answer)}</div>
+    <div class="result-stats">
+      <div><small>Solved after</small><b>${win?`${s.stageIndex+1} of ${c.stages.length} clues`:'Not solved'}</b></div>
+      <div><small>Lives remaining</small>${hearts(s.lives,c.maxLives,{sm:true})}</div>
+      <div><small>Score</small><b>${s.score}</b></div>
+    </div>
+  </div>
+  <div class="review">
+    <div><h4>Your path</h4><ul class="path">${pathHtml}</ul></div>
+    <div><h4>Key clues</h4><ol>${c.keyClues.map(k=>`<li>${esc(k)}</li>`).join('')}</ol></div>
+    ${c.why?`<div><h4>Why ${esc(c.answer)} fits</h4><p style="font-size:14px">${esc(c.why)}</p></div>`:''}
+    ${c.differentials.length?`<div><h4>Why the other answers fit less well</h4><div class="diff">${c.differentials.map(d=>`<div><b>${esc(d[0])}</b> · ${esc(d[1])}</div>`).join('')}</div></div>`:''}
+    ${c.learning.length?`<div><h4>Learning points</h4><ul>${c.learning.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>`:''}
+    <div><h4>References</h4><ul>${c.refs.map(r=>`<li class="ref">${esc(r)} <span class="badge warn">Needs verification</span></li>`).join('')||'<li class="ref muted">None added</li>'}</ul></div>
+    <div><h4>Share card · no answer shown</h4><div class="share" id="shareTxt">${esc(shareText(c,s))}</div>
+      <div class="mk-row" style="margin-top:10px"><button class="btn btn-line btn-sm" id="copyShare">${ico('copy')} Copy result</button><button class="btn btn-cta btn-sm" id="againBtn">Play again</button></div></div>
+  </div>`;
+  $('#againBtn').onclick=()=>loadCase(c);
+  $('#copyShare').onclick=()=>{
+    const txt=shareText(c,s);
+    const fallback=()=>{const r=document.createRange();r.selectNodeContents($('#shareTxt'));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast('Text selected. Copy it with your keyboard.')};
+    try{navigator.clipboard.writeText(txt).then(()=>toast('Result copied'),fallback)}catch(e){fallback()}
+  };
+}
+function renderInspector(){
+  const c=ENG.c,s=ENG.s;
+  const map={NOT_STARTED:['NS',[]],STARTED:['IP',['NS']],NEXT_STAGE:['IP',['AS','LL','NX']],STAY_ON_LAST:['IP',['AS','LL','SL']],CORRECT:['CS',['IP','AS']],FAILED:['CF',['IP','AS','LL']]};
+  const k=s.status==='NOT_STARTED'?'NOT_STARTED':s.event;
+  const [on,trail]=map[k]||['IP',[]];
+  smHighlight(on,trail);
+  const wrong=s.path.filter(p=>!p.correct).length;
+  const potential=s.status==='IN_PROGRESS'?scoreFor(c,s.stageIndex,s.lives):s.score;
+  $('#vars').innerHTML=`<div><small>status</small><b class="mono" style="font-size:12.5px">${s.status}</b></div><div><small>stage</small><b>${s.stageIndex+1} / ${c.stages.length}</b></div><div><small>lives</small><b>${s.lives} / ${c.maxLives}</b></div><div><small>${s.status==='IN_PROGRESS'?'score if correct now':'score'}</small><b>${s.status==='NOT_STARTED'?maxScore(c):potential}</b></div>`;
+  const last=c.stages.length, reach=Math.min(c.maxLives,last);
+  $('#ruleCard').innerHTML=`<span class="ico-circle">${ico('info')}</span><div><b>Rules for this case</b><div class="muted" style="font-size:13.5px;margin-top:4px">${c.maxLives} lives, ${last} stages, life cost 1 per wrong answer. ${reach<last?`With ${c.maxLives} lives a learner can reach at most stage ${reach}. `:''}When stages run out but lives remain: <b>${c.onStagesExhausted==='fail'?'the case ends':'stay on the last stage and strike out the wrong option'}</b>. Earlier clues ${c.revealPrevious?'stay visible':'are hidden'}. Wrong picks so far: ${wrong}.</div></div>`;
+  $('#log').innerHTML=ENG.log.length?ENG.log.slice(0,8).map(l=>`<li><span class="ev ${l.ev}">${l.ev}</span><span>${esc(l.txt)}</span></li>`).join(''):`<li><span class="ev">—</span><span>No answers yet. Start the case and pick an option.</span></li>`;
+}
+
+/* ---------- builder ---------- */
+const DOMAINS=['Medical Diagnosis','Materia Medica','Repertory','Pathology','Pharmacology','Anatomy','Physiology','Pediatrics','Dermatology','ENT','Neurology','Cardiology','Respiratory Medicine','Gastroenterology','Endocrinology','Emergency Medicine','Clinical Reasoning'];
+const STATUSES=['DRAFT','READY_FOR_REVIEW','REVIEWED','PUBLISHED','ARCHIVED'];
+const mkOpt=(label,correct=false)=>({id:nid('o'),label,correct});
+const B={
+  title:'Voice changes in a young teacher',domain:'Medical Diagnosis',category:'ENT',difficulty:'Intermediate',maxLives:4,onExhausted:'stay',reveal:true,status:'DRAFT',
+  stages:[
+    {id:nid('s'),title:'Presentation',clue:'A 22-year-old woman reports several months of a hoarse voice.',question:'What is the most likely diagnosis?',options:[mkOpt('Acute laryngitis'),mkOpt('Vocal fold nodules',true),mkOpt('Laryngeal carcinoma'),mkOpt('Vocal fold paralysis')]},
+    {id:nid('s'),title:'History',clue:'She is a primary school teacher. Her voice gets worse through the working week and improves after a rest.',question:'What is the most likely diagnosis now?',options:[mkOpt('Vocal fold nodules',true),mkOpt('Laryngopharyngeal reflux'),mkOpt('Vocal fold polyp'),mkOpt('Muscle tension dysphonia')]},
+    {id:nid('s'),title:'Laryngoscopy',clue:'Small, symmetrical swellings on both vocal folds at the junction of the front and middle thirds.',question:'Final diagnosis?',options:[mkOpt('Vocal fold nodules'),mkOpt('Vocal fold cyst'),mkOpt("Reinke's oedema")]}
+  ],
+  explanation:'Persistent hoarseness in a heavy professional voice user, worse with voice use and better with rest, with bilateral symmetrical lesions at the junction of the anterior and middle thirds of the vocal folds, points to vocal fold nodules.',
+  learning:'Voice overuse is the main risk factor.\nBilateral and symmetrical lesions favour nodules over polyps or cysts.\nVoice therapy is first-line management.',
+  refs:[{id:nid('r'),title:'Placeholder: ENT textbook chapter on benign vocal fold lesions',verified:false}],
+  savedAt:Date.now(),saving:false
+};
+function validate(){
+  const E=[],W=[];
+  if(!B.title.trim()) E.push(['Add a case title.','b-general']);
+  if(B.stages.length<2) E.push(['Add at least 2 stages so a wrong answer can reveal a new clue.','b-stages']);
+  B.stages.forEach((st,i)=>{
+    const n=i+1;
+    if(!st.clue.trim()) E.push([`Stage ${n} has no clue text.`,'st-'+st.id]);
+    if(!st.question.trim()) E.push([`Stage ${n} has no question.`,'st-'+st.id]);
+    const filled=st.options.filter(o=>o.label.trim());
+    if(filled.length<2) E.push([`Stage ${n} needs at least 2 answer options.`,'st-'+st.id]);
+    if(st.options.some(o=>!o.label.trim())) E.push([`Stage ${n} has an empty answer option.`,'st-'+st.id]);
+    if(!st.options.some(o=>o.correct)) E.push([`Stage ${n} has no correct answer.`,'st-'+st.id]);
+  });
+  const answers=B.stages.map(st=>(st.options.find(o=>o.correct)||{}).label).filter(Boolean);
+  for(let i=1;i<B.stages.length;i++){
+    const a=(B.stages[i-1].options.find(o=>o.correct)||{}).label, b=(B.stages[i].options.find(o=>o.correct)||{}).label;
+    if(a&&b&&a.trim().toLowerCase()!==b.trim().toLowerCase()) W.push([`Stage ${i+1}'s correct answer (“${b}”) differs from Stage ${i}'s (“${a}”). That is fine for repertory steps; otherwise check it.`,'st-'+B.stages[i].id]);
+  }
+  if(B.maxLives<B.stages.length) W.push([`With ${B.maxLives} lives, learners can reach at most Stage ${B.maxLives}. Stages after that will only appear in the review.`,'b-general']);
+  const previewOk=E.length===0;
+  const R=[];
+  if(!B.explanation.trim()) R.push(['Add an explanation so learners who run out of lives still learn.','b-teach']);
+  if(!B.refs.length) R.push(['Add at least one reference.','b-refs']);
+  const unv=B.refs.filter(r=>!r.verified).length;
+  if(unv) R.push([`${unv} reference${unv>1?'s':''} still need${unv>1?'':'s'} to be verified.`,'b-refs']);
+  return {E,W,R,previewOk,reviewOk:previewOk&&R.length===0,answer:answers[answers.length-1]};
+}
+function builderHTML(){
+  return `
+  <nav class="b-steps" aria-label="Builder sections">
+    <a class="b-step" href="#b-general">General information <small id="bs-general"></small></a>
+    <a class="b-step" href="#b-stages">Stages <small id="bs-stages"></small></a>
+    <a class="b-step" href="#b-teach">Explanation <small id="bs-teach"></small></a>
+    <a class="b-step" href="#b-refs">References <small id="bs-refs"></small></a>
+    <div class="save-state" id="saveState"><i></i><span>Saved</span></div>
+  </nav>
+  <div class="b-main">
+    <section class="surface b-sec" id="b-general"><h3>General information</h3>
+      <div class="field"><label for="b-title">Case title</label><input class="inp" id="b-title" data-k="title" value="${esc(B.title)}"><small>Slug: <span class="mono" id="slug"></span></small></div>
+      <div class="f-grid">
+        <div class="field"><label for="b-domain">Domain</label><select class="inp" id="b-domain" data-k="domain">${DOMAINS.map(d=>`<option ${d===B.domain?'selected':''}>${d}</option>`).join('')}</select></div>
+        <div class="field"><label for="b-cat">Category / specialty</label><input class="inp" id="b-cat" data-k="category" value="${esc(B.category)}"></div>
+        <div class="field"><label for="b-diff">Difficulty</label><select class="inp" id="b-diff" data-k="difficulty">${['Easy','Intermediate','Hard'].map(d=>`<option ${d===B.difficulty?'selected':''}>${d}</option>`).join('')}</select></div>
+        <div class="field"><span class="lab" id="lives-l">Maximum lives</span><div class="stepper" role="group" aria-labelledby="lives-l"><button type="button" data-act="lives-" aria-label="One fewer life">−</button><output id="livesOut" aria-live="polite"></output><button type="button" data-act="lives+" aria-label="One more life">+</button></div></div>
+        <div class="field"><label for="b-exh">When stages run out but lives remain</label><select class="inp" id="b-exh" data-k="onExhausted"><option value="stay" ${B.onExhausted==='stay'?'selected':''}>Stay on last stage, strike out wrong pick</option><option value="fail" ${B.onExhausted==='fail'?'selected':''}>End the case</option></select></div>
+        <div class="field"><span class="lab">Clue display</span><label class="toggle"><input type="checkbox" id="b-reveal" data-k="reveal" ${B.reveal?'checked':''}> Keep earlier clues visible</label></div>
+      </div>
+    </section>
+    <section class="surface b-sec" id="b-stages"><h3>Stages</h3><div id="stageList" style="display:grid;gap:12px"></div>
+      <button type="button" class="add-row" data-act="addStage">${ico('plus')} Add stage</button></section>
+    <section class="surface b-sec" id="b-teach"><h3>Explanation and teaching</h3>
+      <div class="field"><label for="b-exp">Final explanation (shown on success and on failure)</label><textarea class="inp" id="b-exp" data-k="explanation">${esc(B.explanation)}</textarea></div>
+      <div class="field"><label for="b-learn">Learning points, one per line</label><textarea class="inp" id="b-learn" data-k="learning">${esc(B.learning)}</textarea></div>
+    </section>
+    <section class="surface b-sec" id="b-refs"><h3>References</h3><div id="refList" style="display:grid;gap:8px"></div>
+      <button type="button" class="add-row" data-act="addRef">${ico('plus')} Add reference</button>
+      <small class="muted">Never paste AI-generated citations. Tick “Verified” only after checking the source.</small></section>
+  </div>
+  <aside class="surface b-ready" aria-live="polite" id="readyPanel"></aside>`;
+}
+function stageHTML(st,i){
+  const n=B.stages.length;
+  return `<div class="stage" id="st-${st.id}" data-si="${i}">
+    <div class="stage-h"><span class="num">Stage ${i+1}</span><input class="inp" aria-label="Stage ${i+1} title" data-sf="title" value="${esc(st.title)}" placeholder="e.g. Examination">
+      <div class="acts"><button type="button" class="icon-btn" data-act="up" aria-label="Move stage ${i+1} up" ${i===0?'disabled':''}>${ico('up')}</button><button type="button" class="icon-btn" data-act="down" aria-label="Move stage ${i+1} down" ${i===n-1?'disabled':''}>${ico('down')}</button><button type="button" class="icon-btn" data-act="dupStage" aria-label="Duplicate stage ${i+1}">${ico('dup')}</button><button type="button" class="icon-btn" data-act="delStage" aria-label="Delete stage ${i+1}" ${n<=1?'disabled':''}>${ico('trash')}</button></div></div>
+    <div class="stage-b">
+      <div class="field"><label for="clue-${st.id}">Clue revealed at this stage</label><textarea class="inp" id="clue-${st.id}" data-sf="clue">${esc(st.clue)}</textarea></div>
+      <div class="field"><label for="q-${st.id}">Question</label><input class="inp" id="q-${st.id}" data-sf="question" value="${esc(st.question)}"></div>
+      <div class="field"><span class="lab">Answer options for this stage</span>
+        <div style="display:grid;gap:8px" role="radiogroup" aria-label="Correct answer for stage ${i+1}">${st.options.map((o,j)=>`<div class="optrow" data-oi="${j}"><span class="key">${String.fromCharCode(65+j)}</span><input class="inp" aria-label="Stage ${i+1} option ${String.fromCharCode(65+j)}" data-of="label" value="${esc(o.label)}" placeholder="Answer option"><button type="button" class="correct-btn" role="radio" aria-checked="${o.correct}" data-act="correct">${ico('check')} Correct</button><button type="button" class="icon-btn del" data-act="delOpt" aria-label="Remove option ${String.fromCharCode(65+j)}" ${st.options.length<=2?'disabled':''}>${ico('x')}</button></div>`).join('')}</div>
+        <button type="button" class="add-row" data-act="addOpt" style="margin-top:4px">${ico('plus')} Add option</button>
+      </div>
+    </div></div>`;
+}
+function renderStages(){$('#stageList').innerHTML=B.stages.map(stageHTML).join('')}
+function renderRefs(){$('#refList').innerHTML=B.refs.map((r,i)=>`<div class="refrow" data-ri="${i}"><input class="inp" aria-label="Reference ${i+1}" data-rf="title" value="${esc(r.title)}" placeholder="Title, authors, source, year"><label class="toggle" style="font-size:13px"><input type="checkbox" data-rf="verified" ${r.verified?'checked':''}> Verified</label><button type="button" class="icon-btn" data-act="delRef" aria-label="Remove reference ${i+1}">${ico('trash')}</button></div>`).join('')||'<p class="muted" style="font-size:14px">No references yet.</p>'}
+function slugify(s){return s.toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-').slice(0,60)||'untitled'}
+function renderReady(){
+  const v=validate();
+  $('#livesOut').innerHTML=`${hearts(B.maxLives,B.maxLives,{sm:true})} ${B.maxLives}`;
+  $('#slug').textContent=slugify(B.title);
+  const stE=v.E.some(e=>e[1].startsWith('st-')||e[1]==='b-stages');
+  const set=(id,ok,txt)=>{const el=$('#'+id);if(el)el.innerHTML=(ok?ico('check'):ico('alert'))+esc(txt)};
+  set('bs-general',!v.E.some(e=>e[1]==='b-general'),'');
+  set('bs-stages',!stE,B.stages.length+'');
+  set('bs-teach',!!B.explanation.trim(),'');
+  set('bs-refs',B.refs.length&&B.refs.every(r=>r.verified),B.refs.length+'');
+  const li=(cls,icon,[msg,target])=>`<li class="${cls}">${ico(icon)}<a href="#${target}" style="color:inherit">${esc(msg)}</a></li>`;
+  const items=[...v.E.map(e=>li('e','x',e)),...v.W.map(w=>li('w','alert',w)),...v.R.map(r=>li('e','x',r))];
+  const si=STATUSES.indexOf(B.status);
+  const canSubmit=B.status==='DRAFT'&&v.reviewOk;
+  $('#readyPanel').innerHTML=`
+    <div><div class="eyebrow">Status</div><div class="flow" style="margin-top:6px">${STATUSES.map((s,i)=>`${i?'<em>→</em>':''}<span class="${i===si?'on':''}">${s}</span>`).join('')}</div></div>
+    <h3>Readiness</h3>
+    <ul class="issues">${items.length?items.join(''):`<li class="ok">${ico('check')}<span>Everything is complete.</span></li>`}</ul>
+    <div style="display:grid;gap:8px">
+      <button type="button" class="btn btn-cta" data-act="preview" ${v.previewOk?'':'disabled'}>${ico('eye')} Preview as learner</button>
+      <small class="muted">${v.previewOk?'Plays your draft with the real engine. Not recorded in statistics.':'Preview unlocks when every stage has a clue, a question, 2+ options and a correct answer.'}</small>
+      <button type="button" class="btn btn-navy" data-act="submitReview" ${canSubmit?'':'disabled'}>Submit for review</button>
+      <button type="button" class="btn btn-line" data-act="publish" disabled title="Publishing needs a reviewer's approval and the Admin role">Publish</button>
+      <small class="muted">${B.status==='DRAFT'?'Publishing unlocks after a Reviewer approves. Only Admins publish.':'Submitted. A Reviewer will see this case in the review queue.'}</small>
+      <button type="button" class="btn btn-line btn-sm" data-act="dupCase">${ico('dup')} Duplicate case as new draft</button>
+    </div>`;
+}
+let saveTimer;
+function touch(){
+  B.saving=true; const s=$('#saveState'); if(s){s.classList.add('saving');s.querySelector('span').textContent='Saving…'}
+  clearTimeout(saveTimer); saveTimer=setTimeout(()=>{B.saving=false;B.savedAt=Date.now();const s=$('#saveState');if(s){s.classList.remove('saving');s.querySelector('span').textContent='Saved'}},700);
+}
+function renderBuilder(){$('#builderRoot').innerHTML=builderHTML();renderStages();renderRefs();renderReady()}
+const broot=$('#builderRoot');
+broot.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.k){B[t.dataset.k]=t.type==='checkbox'?t.checked:t.value}
+  else if(t.dataset.sf){B.stages[+t.closest('[data-si]').dataset.si][t.dataset.sf]=t.value}
+  else if(t.dataset.of){const st=B.stages[+t.closest('[data-si]').dataset.si];st.options[+t.closest('[data-oi]').dataset.oi].label=t.value}
+  else if(t.dataset.rf){const r=B.refs[+t.closest('[data-ri]').dataset.ri];r[t.dataset.rf]=t.type==='checkbox'?t.checked:t.value}
+  else return;
+  touch(); renderReady();
+});
+broot.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b||b.disabled) return;
+  const a=b.dataset.act, se=b.closest('[data-si]'), si=se?+se.dataset.si:-1, st=B.stages[si];
+  let restage=false, reref=false, focusSel=null;
+  switch(a){
+    case 'lives-': B.maxLives=Math.max(1,B.maxLives-1); break;
+    case 'lives+': B.maxLives=Math.min(10,B.maxLives+1); break;
+    case 'addStage': {const ns={id:nid('s'),title:'',clue:'',question:B.stages.length?B.stages[B.stages.length-1].question:'What is the most likely diagnosis?',options:[mkOpt(''),mkOpt('')]};B.stages.push(ns);restage=true;focusSel=`#clue-${ns.id}`;break}
+    case 'delStage': B.stages.splice(si,1); restage=true; toast(`Stage ${si+1} deleted`); break;
+    case 'dupStage': {const c=JSON.parse(JSON.stringify(st));c.id=nid('s');c.options.forEach(o=>o.id=nid('o'));c.title=(c.title||'Stage')+' (copy)';B.stages.splice(si+1,0,c);restage=true;toast(`Stage ${si+1} duplicated`);break}
+    case 'up': if(si>0){[B.stages[si-1],B.stages[si]]=[B.stages[si],B.stages[si-1]];restage=true;focusSel=`#st-${st.id} [data-act="up"]`} break;
+    case 'down': if(si<B.stages.length-1){[B.stages[si+1],B.stages[si]]=[B.stages[si],B.stages[si+1]];restage=true;focusSel=`#st-${st.id} [data-act="down"]`} break;
+    case 'addOpt': {const o=mkOpt('');st.options.push(o);restage=true;focusSel=`#st-${st.id} .optrow:last-child input`;break}
+    case 'delOpt': st.options.splice(+b.closest('[data-oi]').dataset.oi,1); restage=true; break;
+    case 'correct': {const oi=+b.closest('[data-oi]').dataset.oi; st.options.forEach((o,j)=>o.correct=j===oi); $$('.correct-btn',se).forEach((x,j)=>x.setAttribute('aria-checked',j===oi)); break}
+    case 'addRef': B.refs.push({id:nid('r'),title:'',verified:false}); reref=true; focusSel='#refList .refrow:last-child input'; break;
+    case 'delRef': B.refs.splice(+b.closest('[data-ri]').dataset.ri,1); reref=true; break;
+    case 'preview': return preview();
+    case 'submitReview': B.status='READY_FOR_REVIEW'; toast('Submitted for review'); break;
+    case 'dupCase': B.title=B.title.replace(/( \(copy\))*$/,'')+' (copy)'; B.status='DRAFT'; B.refs.forEach(r=>r.verified=false); $('#b-title').value=B.title; toast('Duplicated as a new draft with a new slug'); break;
+    default: return;
+  }
+  if(restage) renderStages(); if(reref) renderRefs();
+  touch(); renderReady();
+  if(focusSel){const f=$(focusSel); if(f) f.focus()}
+});
+function preview(){
+  const v=validate(); if(!v.previewOk) return;
+  const c=normCase({
+    id:'draft',number:'DRAFT',title:B.title||'Untitled case',domain:B.domain,category:B.category||'General',difficulty:B.difficulty,maxLives:B.maxLives,onStagesExhausted:B.onExhausted,revealPrevious:B.reveal,preview:true,
+    answer:v.answer,
+    stages:B.stages.map((st,i)=>({title:st.title||'Stage '+(i+1),clue:st.clue,question:st.question,options:st.options.map(o=>({id:o.id,label:o.label,correct:o.correct}))})),
+    keyClues:B.stages.map(st=>st.clue),why:B.explanation,differentials:[],learning:B.learning.split('\n').map(s=>s.trim()).filter(Boolean),refs:B.refs.map(r=>r.title).filter(Boolean)
+  });
+  ENG.draft=c; loadCase(c); openTab('engine'); window.scrollTo({top:0}); toast('Previewing your draft');
+}
+
+/* ---------- phases ---------- */
+const browser=(url,body)=>`<div class="mk fr-browser"><div class="fr-bar"><i></i><i></i><i></i><span class="fr-url">${url}</span></div><div class="fr-body">${body}</div></div>`;
+const phone=body=>`<div class="mk fr-phone">${body}</div>`;
+const optM=(l,t,cls='')=>`<div class="mk-opt ${cls}"><span class="l">${l}</span>${t}</div>`;
+function playerMock(stage=1){
+  return phone(`<div class="mk-col">
+    <div class="mk-row" style="justify-content:space-between"><span class="mk-s">Medicine · Dermatology</span><span class="badge" style="font-size:9.5px;padding:1px 6px">Intermediate</span></div>
+    <div class="mk-h" style="font-size:14px">Case #0124</div>
+    <div class="mk-row" style="justify-content:space-between;background:var(--card);border-radius:10px;padding:7px 8px">${hearts(stage===1?5:4,5,{sm:true})}${dots(4,stage-1,{sm:true})}</div>
+    <div class="mk-card"><div class="mk-s" style="font-family:var(--font-mono);font-size:9px">CLUE 1</div>A 24-year-old man has an itchy, slowly enlarging rash on his forearm.</div>
+    ${stage>1?`<div class="mk-card" style="background:var(--surface);border:1.5px solid var(--strong)"><div class="mk-row" style="justify-content:space-between"><span class="mk-s" style="font-family:var(--font-mono);font-size:9px">CLUE 2</span><span class="badge navy" style="font-size:9px;padding:1px 6px">New</span></div>He recently adopted a kitten. Single ring-shaped lesion.</div>`:''}
+    <b style="font-family:var(--font-display);font-size:12.5px">What is the most likely diagnosis?</b>
+    ${stage>1?optM('A','Tinea corporis','sel')+optM('B','Granuloma annulare')+optM('C','Nummular eczema')+optM('D','Pityriasis rosea'):optM('A','Psoriasis','sel')+optM('B','Tinea corporis')+optM('C','Nummular eczema')+optM('D','Scabies')}
+    <div class="mk-btn navy">Submit answer</div></div>`);
+}
+const MOCK={
+ 0:()=>`<div class="arch" style="max-width:640px;margin-inline:auto">${ARCH}</div>`,
+ 1:()=>browser('localhost:3000/dev/ui',`<div class="mk-g2"><div class="mk-col">
+   <div class="mk-h">Component gallery</div>
+   <div class="mk-row"><span class="mk-btn">Primary action</span><span class="mk-btn navy">Secondary</span><span class="mk-btn line">Ghost</span></div>
+   <div class="mk-row"><span class="badge ok">Easy</span><span class="badge warn">Intermediate</span><span class="badge bad">Hard</span><span class="badge navy">PUBLISHED</span><span class="badge">DRAFT</span></div>
+   <div class="mk-input">Search cases…</div>
+   <div class="mk-row">${hearts(3,5,{sm:true})}${dots(5,2,{sm:true})}</div>
+   ${optM('A','Answer option')}${optM('B','Selected option','sel')}
+   <div class="mk-card mk-col"><div class="mk-skel" style="width:70%"></div><div class="mk-skel"></div><div class="mk-skel" style="width:45%"></div></div>
+  </div><div class="mk-col"><div class="mk-h">Project structure</div><div class="mk-tree">src/
+├─ app/  (public) (learner) admin
+├─ components/ ui player builder
+├─ lib/
+│  ├─ engine/   ← game rules + tests
+│  ├─ schemas/  ← Zod
+│  └─ db/ auth/ config/
+supabase/ migrations/ seed.sql
+tests/ unit/ e2e/
+.github/workflows/ci.yml</div><div class="mk-card"><div class="mk-row"><span class="badge ok">${ico('check')} lint</span><span class="badge ok">${ico('check')} typecheck</span><span class="badge ok">${ico('check')} test</span><span class="badge ok">${ico('check')} build</span></div><div class="mk-s" style="margin-top:6px">CI runs on every push and pull request.</div></div></div></div>`),
+ 2:()=>browser('wisecases.app/sign-in',`<div class="mk-g2"><div class="mk-card mk-col" style="background:var(--surface);border:1px solid var(--line)">
+   <div class="mk-h" style="font-size:14px">Sign in</div><div class="mk-s">Save progress, streaks and bookmarks.</div>
+   <div class="mk-input">Email</div><div class="mk-input">Password</div><div class="mk-btn navy">Sign in</div><div class="mk-btn line">Continue with Google</div><div class="mk-btn">Play as guest</div></div>
+   <div class="mk-col"><div class="mk-h">Access checks</div>
+   <div class="mk-card mk-col"><div class="mk-row" style="justify-content:space-between"><span>Learner opens /admin</span><span class="badge bad">403</span></div><div class="mk-row" style="justify-content:space-between"><span>Learner reads a DRAFT case</span><span class="badge bad">0 rows</span></div><div class="mk-row" style="justify-content:space-between"><span>Editor publishes</span><span class="badge bad">Denied</span></div><div class="mk-row" style="justify-content:space-between"><span>Admin publishes</span><span class="badge ok">Allowed</span></div></div>
+   <div class="mk-card"><div class="mk-s">Migrations</div><div class="mono" style="font-size:10.5px;line-height:1.7">0001_core_tables.sql<br>0002_rls_policies.sql<br>0003_indexes.sql<br>seed.sql · 7 DEMO cases</div></div></div></div>`),
+ 3:()=>browser('wisecases.app/admin/cases/new',`<div style="display:grid;grid-template-columns:120px 1fr;gap:10px">
+   <div class="mk-side"><div class="on">General <span>✓</span></div><div>Stages <span>3</span></div><div>Teaching <span>✓</span></div><div>References <span>2</span></div><div>Review <span>!</span></div><div style="opacity:.5">Publish <span>🔒</span></div><div class="mk-s" style="margin-top:6px;display:flex;gap:6px;align-items:center"><i style="width:7px;height:7px;border-radius:50%;background:var(--teal);display:block"></i>Saved</div></div>
+   <div class="mk-col"><div class="mk-card" style="background:var(--surface);border:1px solid var(--line)"><div class="mk-row" style="justify-content:space-between"><span class="badge navy">STAGE 3</span><span class="mk-s">↑ ↓ ⧉ 🗑</span></div>
+   <div class="mk-s" style="margin-top:6px">Clue</div><div class="mk-input" style="color:var(--ink)">Laryngoscopy shows symmetrical swellings on both vocal folds…</div>
+   <div class="mk-s" style="margin-top:6px">Options</div><div class="mk-col" style="margin-top:4px">${optM('A','Vocal fold nodules')}${optM('B','Vocal fold cyst')}${optM('C',"Reinke's oedema")}</div><div class="mk-s" style="margin-top:6px;text-align:center;border:1px dashed var(--line);border-radius:8px;padding:5px">+ Add option</div></div>
+   <div class="mk-card" style="background:var(--red-soft);display:flex;gap:6px;align-items:center">${ico('x')}<b>Stage 3 has no correct answer.</b></div>
+   <div class="mk-row"><span class="mk-btn">Preview as learner</span><span class="mk-btn line">Duplicate</span><span class="mk-btn line" style="opacity:.5">Publish</span></div></div></div>`),
+ 4:()=>`<div class="mk-g2" style="max-width:640px;margin-inline:auto;align-items:start">${playerMock(1)}${playerMock(2)}</div>`,
+ 5:()=>`<div class="mk-g2" style="max-width:660px;margin-inline:auto;align-items:start">${phone(`<div class="mk-col"><div class="mk-card" style="background:var(--teal-soft);text-align:center;display:grid;gap:4px;justify-items:center"><span class="ico-circle" style="background:var(--teal);width:32px;height:32px">${ico('target')}</span><div class="mk-h" style="font-size:16px">Correct</div><div class="mk-s">Diagnosis</div><b style="font-family:var(--font-display);font-size:14px">Tinea corporis</b><div class="mk-g3" style="width:100%"><div class="mk-card" style="background:var(--surface);padding:6px"><div class="mk-s">Clues</div><b>3/4</b></div><div class="mk-card" style="background:var(--surface);padding:6px"><div class="mk-s">Lives</div><b>3/5</b></div><div class="mk-card" style="background:var(--surface);padding:6px"><div class="mk-s">Score</div><b>${scoreFor(ENGINE_CASES[0],2,3)}</b></div></div></div><div class="mk-h">Share</div><div class="share" style="font-size:10.5px;padding:10px">WiseCases #0124\n🎯 3/4 clues\n❤️❤️❤️🤍🤍\n⭐⭐⭐</div></div>`)}
+   ${phone(`<div class="mk-col"><div class="mk-h">Your path</div><div class="mk-card mk-row" style="justify-content:space-between"><span>1 · Psoriasis</span><span class="badge bad">✕</span></div><div class="mk-card mk-row" style="justify-content:space-between"><span>2 · Granuloma annulare</span><span class="badge bad">✕</span></div><div class="mk-card mk-row" style="justify-content:space-between"><span>3 · Tinea corporis</span><span class="badge ok">✓</span></div><div class="mk-h">Why not the others</div><div class="mk-card"><b>Granuloma annulare</b> · ring-shaped but not scaly, KOH negative.</div><div class="mk-h">Learning points</div><div class="mk-s">• Scale at a ring's edge → KOH scraping<br>• Ask about pets</div><div class="mk-h">References</div><div class="mk-s">2 verified references</div></div>`)}</div>`,
+ 6:()=>browser('wisecases.app/dashboard',`<div class="mk-col"><div class="mk-g4">${[['42','Attempted'],['31','Solved'],['74%','Accuracy'],['6 days','Streak']].map(k=>`<div class="mk-card mk-kpi"><b>${k[0]}</b><span class="mk-s">${k[1]}</span></div>`).join('')}</div>
+   <div class="mk-row"><div class="mk-input" style="flex:1 1 140px">Search 3,214 cases…</div><span class="badge navy">Dermatology</span><span class="badge">Intermediate</span><span class="badge">Not completed</span><span class="badge">Bookmarked</span></div>
+   ${[['#0311','Sudden painful red eye','Ophthalmology','Hard'],['#0298','Night sweats and cough','Respiratory','Intermediate'],['#0287','Better from pressure','Materia Medica','Easy']].map(r=>`<div class="mk-card mk-row" style="justify-content:space-between;background:var(--surface);border:1px solid var(--line)"><span class="mono" style="font-size:10.5px;color:var(--ink-3)">${r[0]}</span><b style="flex:1">${r[1]}</b><span class="mk-s">${r[2]}</span><span class="badge">${r[3]}</span></div>`).join('')}
+   <div class="mk-row" style="justify-content:center"><span class="mk-btn line">Load more</span></div></div>`),
+ 7:()=>browser('wisecases.app/admin/analytics',`<div class="mk-col"><div class="mk-g4">${[['1,284','Attempts (7d)'],['63%','Solved'],['2.4','Avg. stage solved'],['4m 10s','Avg. time']].map(k=>`<div class="mk-card mk-kpi"><b>${k[0]}</b><span class="mk-s">${k[1]}</span></div>`).join('')}</div>
+   <div class="mk-g2"><div class="mk-card mk-col" style="background:var(--surface);border:1px solid var(--line)"><div class="mk-row" style="justify-content:space-between"><b>Case #0124 · Stage 1 choices</b><span class="badge warn">Check distractor</span></div>
+   <div class="mk-bars">${[['A · Psoriasis',12],['B · Tinea corporis ✓',13,'ok'],['C · Nummular eczema',67,'hot'],['D · Scabies',8]].map(r=>`<div class="r"><span>${r[0]}</span><span class="t"><span class="f ${r[2]||''}" style="width:${r[1]}%;display:block"></span></span><b>${r[1]}%</b></div>`).join('')}</div>
+   <div class="mk-s">67% pick C at Stage 1. The clue may not separate eczema clearly enough.</div></div>
+   <div class="mk-card mk-col" style="background:var(--surface);border:1px solid var(--line)"><b>Unusually low success</b>${[['#0177','Painless jaundice','21%'],['#0230','Rubric: thirst','28%'],['#0102','Chest pain, young','31%']].map(r=>`<div class="mk-row" style="justify-content:space-between"><span class="mono" style="font-size:10.5px">${r[0]}</span><span style="flex:1">${r[1]}</span><span class="badge bad">${r[2]}</span></div>`).join('')}<b style="margin-top:6px">Bulk import</b><div class="mk-row"><span class="badge ok">48 valid</span><span class="badge bad">2 errors</span><span class="mk-btn line">Preview</span></div></div></div></div>`),
+ 8:()=>`<div class="mk-g2" style="max-width:700px;margin-inline:auto;align-items:start">${browser('wisecases.app/profile',`<div class="mk-col"><div class="mk-h">Achievements</div><div class="mk-g3">${[['First diagnosis',1],['10 cases',1],['Perfect diagnosis',1],['5-day streak',1],['Dermatology explorer',0],['Repertory explorer',0]].map(a=>`<div class="mk-card" style="text-align:center;${a[1]?'':'opacity:.45'}"><span class="ico-circle" style="width:30px;height:30px;margin:0 auto 4px">${ico(a[1]?'check':'target')}</span><span class="mk-s">${a[0]}</span></div>`).join('')}</div>
+   <div class="mk-card"><div class="mk-s">Score rules (editable by Admin)</div><div class="mono" style="font-size:10px;margin-top:4px;line-height:1.6">base 1000 × difficulty 1.25<br>× clue efficiency × life multiplier<br>+ daily bonus + streak bonus</div></div></div>`)}
+   <div class="mk-col"><div class="mk-card" style="background:var(--strong);color:#fff"><div class="mk-s" style="color:var(--on-navy-2)">CASE OF THE DAY · Sat 4 Oct</div><div class="mk-h" style="font-size:14px;margin-top:4px">#0241 · Stiff on rising</div><div class="mk-btn" style="margin-top:8px;display:inline-block">Play today's case</div></div>
+   <div class="mk-card mk-col" style="background:var(--surface);border:1px solid var(--line)"><b>Leaderboard · this week</b>${[['1','meera.k','4,820'],['2','drArun','4,610'],['3','you','4,105']].map(r=>`<div class="mk-row" style="justify-content:space-between"><span class="mono">${r[0]}</span><span style="flex:1">${r[1]}</span><b>${r[2]}</b></div>`).join('')}<div class="mk-s">Display names only. Emails are never shown.</div></div></div></div>`,
+ 9:()=>`<div class="mk-g2" style="max-width:640px;margin-inline:auto;align-items:start">${phone(`<div class="mk-col"><div class="mk-card" style="background:var(--strong);color:#fff;display:flex;gap:8px;align-items:center"><span class="mark" style="width:26px;height:26px;border-radius:8px;background:#fff;display:grid;place-items:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24"><path d="${HEART}" fill="#E53935"/></svg></span><div style="flex:1"><b>Install WiseCases</b><div class="mk-s" style="color:var(--on-navy-2)">Add to your home screen</div></div><span class="mk-btn" style="padding:5px 9px">Install</span></div><div class="mk-card mk-col"><div class="mk-skel" style="width:60%"></div><div class="mk-skel"></div><div class="mk-skel" style="width:80%"></div></div><div class="mk-card mk-col"><div class="mk-skel" style="width:50%"></div><div class="mk-skel"></div></div></div>`)}
+   ${phone(`<div class="mk-col"><div class="mk-card" style="background:var(--yellow-soft);display:flex;gap:6px;align-items:flex-start">${ico('alert')}<div><b>You're offline</b><div class="mk-s">Cases you've opened are still readable. Answers need a connection so your lives and score stay accurate.</div></div></div><div class="mk-card"><b>Saved for offline</b><div class="mk-s">#0124 · #0241 · #0287</div></div><div class="mk-btn line" style="opacity:.6">Submit answer (needs connection)</div></div>`)}</div>`,
+ 10:()=>browser('Release audit · targets',`<div class="mk-col"><div class="mk-g4">${[['Performance',90],['Accessibility',95],['Best practices',95],['SEO',95]].map(g=>`<div class="mk-card" style="text-align:center"><div class="gauge" style="--v:${g[1]}"><span>${g[1]}+</span></div><div class="mk-s" style="margin-top:6px">${g[0]}</div></div>`).join('')}</div><div class="mk-s" style="text-align:center">Minimum Lighthouse scores on mobile before release</div>
+   <div class="mk-g2"><div class="mk-card mk-col"><b>Security checks</b>${['RLS on every table','Service key server-only','Answer endpoint rate-limited','Upload type + size limits','Admin actions in audit log'].map(t=>`<div class="mk-row">${ico('shield')}<span>${t}</span></div>`).join('')}</div><div class="mk-card mk-col"><b>Accessibility checks</b>${['Keyboard-only play-through','Screen-reader labels on hearts','Correct/wrong not colour-only','Reduced-motion respected','Contrast AA in both themes'].map(t=>`<div class="mk-row">${ico('check')}<span>${t}</span></div>`).join('')}</div></div></div>`),
+ 11:()=>browser('GitHub Actions · CI report (example layout)',`<div class="mk-col"><div class="mk-row" style="justify-content:space-between"><b>Pull request checks</b><span class="mk-s">What each run will report</span></div>
+   ${[['Unit · engine','life decrement, wrong → next stage, last-stage rule, zero lives, scoring'],['Unit · validation','case schema, stage ordering, duplicate case'],['Database · RLS','drafts hidden, editor cannot publish, learner cannot read answers'],['E2E · admin','log in → create case → stages → options → preview → publish'],['E2E · learner','open → wrong → life lost → next clue → correct → result recorded'],['E2E · failure','all lives lost → answer revealed → explanation']].map(t=>`<div class="mk-card mk-row" style="background:var(--surface);border:1px solid var(--line)"><span class="badge">○</span><b style="min-width:120px">${t[0]}</b><span class="mk-s" style="flex:1 1 200px">${t[1]}</span></div>`).join('')}</div>`),
+ 12:()=>`<div class="mk" style="max-width:760px;margin-inline:auto;display:grid;gap:12px"><div class="mk-pipe">${[['Push to GitHub','feature/* branch'],['CI checks','lint · types · tests · build'],['Vercel preview','unique URL per PR'],['Merge to main','after review'],['Production','wisecases.app']].map((s,i)=>`${i?'<span class="ar">→</span>':''}<div class="st"><b>${s[0]}</b><span class="mk-s">${s[1]}</span></div>`).join('')}</div>
+   <div class="mk-g3"><div class="mk-card"><b>Supabase prod</b><div class="mk-s">Migrations applied by CI, daily backups, point-in-time restore</div></div><div class="mk-card"><b>Secrets</b><div class="mk-s">Stored in Vercel and Supabase settings only. <span class="mono">.env.example</span> in Git.</div></div><div class="mk-card"><b>Monitoring</b><div class="mk-s">Error tracking, uptime check, weekly analytics review</div></div></div></div>`
+};
+const PHASES=[
+ {n:0,name:'Repository audit & architecture',size:'S',status:'In review',goal:'Agree how WiseCases is built before writing app code.',see:['This blueprint page and the written report','Database design and case state machine','Working demo of the engine and builder ideas'],done:['You approve the architecture','The four open decisions are answered'],deps:'Nothing'},
+ {n:1,name:'Project foundation',size:'M',goal:'A running, branded app skeleton with quality checks on every change.',see:['A component gallery page with every base component','Hearts, progress dots and answer options in the WiseAitechs style','Green CI checks on GitHub'],done:['App runs locally with one command','Lint, typecheck, tests and build pass in CI','Engine module written and unit-tested'],deps:'M0 approval'},
+ {n:2,name:'Database + authentication',size:'L',goal:'All tables, security rules, roles and logins in place, with demo cases loaded.',see:['Sign in with email, Google (optional) or as a guest','Admin area refusing learners','7 demo cases in the database'],done:['Every table has Row Level Security','Tests prove drafts are hidden and editors cannot publish','Migrations rebuild the database from zero'],deps:'M1, Supabase project'},
+ {n:3,name:'Admin Case Builder',size:'L',goal:'A non-programmer can create, preview and publish a case.',see:['Case form, stage cards, option editor, references','Readiness panel with plain-language messages','Autosave, duplicate, review and publish buttons'],done:['A 4-stage case is created without help','Preview plays it exactly like a learner','Only Admins can publish; every change is logged'],deps:'M2'},
+ {n:4,name:'Progressive Case Player',size:'M',goal:'Learners play cases on any device with lives and progressive clues.',see:['Hearts, progress dots, stacked clues','New answer options at each stage','Clear wrong-answer feedback, not colour alone'],done:['Refreshing never restores a life','Correct answers never reach the browser early','Works by keyboard and on a small phone'],deps:'M2, M3'},
+ {n:5,name:'Attempt, result & reasoning',size:'M',goal:'Every ending teaches, and every attempt is recorded.',see:['Success and out-of-lives screens','Reasoning review: your path, key clues, differentials, references','Share card without the answer'],done:['Attempt and answers saved with time, lives and score','Failure path shows full explanation','First MVP workflow passes end to end'],deps:'M4',mvpEnd:true},
+ {n:6,name:'Learner dashboard & library',size:'M',goal:'Learners find cases and track their progress.',see:['Stats: attempted, solved, accuracy, streaks','Library with filters, search and pagination','Bookmarks and a retry list'],done:['Library stays fast with 5,000 cases','Search is debounced and server-side'],deps:'M5'},
+ {n:7,name:'Admin analytics & bulk import',size:'M',goal:'Show where learners struggle, and load cases in bulk.',see:['Wrong-answer distribution per stage','Hardest and easiest cases, abandonment stage','JSON / CSV import with preview and errors'],done:['Numbers match the raw attempt data','Import never overwrites cases silently'],deps:'M5'},
+ {n:8,name:'Gamification',size:'M',goal:'Motivation without turning medicine into a toy.',see:['Configurable scoring','Achievements, streaks, daily case','Leaderboard with display names only'],done:['All scoring numbers editable by Admin','Daily case pages never leak the answer'],deps:'M5'},
+ {n:9,name:'PWA / offline',size:'S',goal:'Install on a phone and read loaded content offline.',see:['Install prompt and app icon','Offline banner with clear limits'],done:['App shell and opened cases work offline','Answers are not accepted offline until a sync design is approved'],deps:'M4'},
+ {n:10,name:'Security, performance, accessibility',size:'M',goal:'Harden and polish before real users arrive.',see:['Lighthouse and accessibility audit results','Security checklist signed off'],done:['Mobile Lighthouse targets met','Rate limits and audit logs verified','No secrets in the repository'],deps:'M1–M9'},
+ {n:11,name:'Testing',size:'M',goal:'Close gaps and automate the critical flows.',see:['Full unit, database and end-to-end suites in CI'],done:['Admin-creates-case and learner-plays-both-endings tests pass','A failing test blocks merging'],deps:'M1–M10'},
+ {n:12,name:'Production deployment',size:'S',goal:'WiseCases live, backed up and monitored.',see:['Production site on your domain','Deployment and rollback guide'],done:['Production checklist from the brief fully ticked','Backups tested by a restore'],deps:'M11'}
+];
+let curPhase=0;
+function renderRail(){
+  let html='';
+  PHASES.forEach(p=>{
+    if(p.n===0) html+='<div class="rail-group">Plan</div>';
+    if(p.n===1) html+='<div class="rail-group">First MVP</div>';
+    if(p.n===6) html+='<div class="rail-group">After MVP</div>';
+    html+=`<button class="rail-item" role="tab" aria-selected="${p.n===curPhase}" tabindex="${p.n===curPhase?0:-1}" data-phase="${p.n}"><span class="code">M${String(p.n).padStart(2,'0')}</span><span class="nm">${esc(p.name)}</span><span class="sz">${p.status?'●':''} ${p.size}</span></button>`;
+  });
+  $('#rail').innerHTML=html;
+}
+function renderPhase(){
+  const p=PHASES[curPhase];
+  $('#phaseDetail').innerHTML=`
+    <div class="pd-head"><div><div class="mk-row"><span class="eyebrow">Milestone ${p.n} · size ${p.size}</span>${p.n>=1&&p.n<=5?'<span class="mvp-flag">FIRST MVP</span>':''}${p.status?`<span class="badge warn">${p.status}</span>`:'<span class="badge">Planned</span>'}</div><h3>${esc(p.name)}</h3><p class="pd-goal">${esc(p.goal)}</p></div>
+    <div class="pd-nav"><button class="icon-btn" data-pn="-1" aria-label="Previous milestone" ${curPhase===0?'disabled':''}>${ico('arrowL')}</button><button class="icon-btn" data-pn="1" aria-label="Next milestone" ${curPhase===PHASES.length-1?'disabled':''}>${ico('arrowR')}</button></div></div>
+    <div class="pd-stage">${MOCK[p.n]()}</div>
+    <div class="pd-cols"><div><h4>You will see</h4><ul>${p.see.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div><div><h4>Done when</h4><ul>${p.done.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div><div><h4>Builds on</h4><ul><li>${esc(p.deps)}</li></ul>${p.n===4?'<button class="btn btn-cta btn-sm" data-goto="engine" style="margin-top:10px">Try the player now</button>':''}${p.n===3?'<button class="btn btn-cta btn-sm" data-goto="builder" style="margin-top:10px">Try the builder now</button>':''}${p.mvpEnd?'<p class="muted" style="font-size:13px;margin-top:10px">End of first MVP: admin creates and publishes; learner plays to success or failure and sees the reasoning.</p>':''}</div></div>`;
+}
+function setPhase(n,focus){curPhase=Math.max(0,Math.min(PHASES.length-1,n));renderRail();renderPhase();const b=$(`[data-phase="${curPhase}"]`);if(b){if(focus)b.focus();b.scrollIntoView({block:'nearest',inline:'nearest'})}}
+$('#rail').addEventListener('click',e=>{const b=e.target.closest('[data-phase]');if(b)setPhase(+b.dataset.phase)});
+$('#rail').addEventListener('keydown',e=>{if(['ArrowDown','ArrowRight'].includes(e.key)){e.preventDefault();setPhase(curPhase+1,true)}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();setPhase(curPhase-1,true)}});
+$('#phaseDetail').addEventListener('click',e=>{const b=e.target.closest('[data-pn]');if(b&&!b.disabled)setPhase(curPhase+ +b.dataset.pn)});
+$('#msTable').innerHTML='<tr><th>#</th><th>Milestone</th><th>You will see</th><th>Size</th></tr>'+PHASES.map(p=>`<tr><td class="mono">${p.n}</td><td><b>${esc(p.name)}</b>${p.n>=1&&p.n<=5?' <span class="mvp-flag">MVP</span>':''}</td><td>${esc(p.see[0])}</td><td class="mono">${p.size}</td></tr>`).join('');
+
+/* ---------- database ---------- */
+const GROUPS={people:['People & access','#5B7FD1'],tax:['Taxonomy','#7A5AF8'],content:['Content','#2F6DB5'],gov:['Governance','#B98900'],game:['Gameplay','#E53935'],eng:['Engagement','#018080']};
+const T=(name,g,purpose,cols,links)=>({name,g,purpose,cols,links});
+const TABLES=[
+ T('profiles','people','One row per login. Public display name only; email stays in Supabase Auth.',[['id','uuid','= auth.users.id'],['display_name','text','unique, shown on leaderboard'],['avatar_url','text',''],['current_streak','int',''],['longest_streak','int',''],['xp','int','']],['user_roles','attempts','case_saves']),
+ T('user_roles','people','Which roles each user has. Only Admins can change it; never trusted from the browser.',[['user_id','uuid','→ profiles'],['role','app_role','SUPER_ADMIN | ADMIN | EDITOR | REVIEWER | LEARNER'],['granted_by','uuid','→ profiles']],['profiles']),
+ T('domains','tax','Top-level areas such as Medical Diagnosis, Materia Medica, Repertory.',[['id','uuid',''],['name','text','unique'],['slug','text','unique'],['domain_type','text','medical | materia_medica | repertory | general'],['is_active','bool','']],['categories','cases']),
+ T('categories','tax','Specialties and subcategories. A category with a parent is a subcategory.',[['id','uuid',''],['domain_id','uuid','→ domains'],['parent_id','uuid','→ categories, nullable'],['name','text',''],['slug','text','unique per domain']],['domains','cases']),
+ T('tags','tax','Free labels for search and filtering.',[['id','uuid',''],['name','text','unique'],['slug','text','unique']],['case_tags']),
+ T('case_tags','tax','Links cases and tags (many-to-many).',[['case_id','uuid','→ cases'],['tag_id','uuid','→ tags'],['','','primary key (case_id, tag_id)']],['cases','tags']),
+ T('cases','content','The case itself: settings, status and teaching content. No learner data.',[['id','uuid',''],['slug','text','unique'],['case_number','int','unique, e.g. #0124'],['title','text',''],['domain_id / category_id','uuid','→ domains / categories'],['difficulty','text','EASY | INTERMEDIATE | HARD'],['max_lives','int','check 1–20'],['on_stages_exhausted','text','stay | fail'],['status','case_status','DRAFT → … → ARCHIVED'],['explanation, learning_points','text / jsonb',''],['domain_fields','jsonb','optional homeopathy / repertory fields, Zod-validated'],['version, published_at, last_reviewed_at','',''],['created_by, updated_by, reviewed_by','uuid','→ profiles']],['case_stages','case_references','case_tags','case_versions','case_reviews']),
+ T('case_stages','content','Ordered stages of a case. Each has its own clue, question and interaction type.',[['id','uuid',''],['case_id','uuid','→ cases'],['position','int','unique per case'],['title, clue, question','text',''],['interaction_type','text','SINGLE_CHOICE | MULTIPLE_CHOICE | FREE_TEXT | TRUE_FALSE | ORDERING | MATCHING …'],['hint, explanation','text','optional'],['points','int',''],['life_cost','int','default 1, 0 = free stage'],['keep_previous_visible','bool','default true']],['cases','stage_options','stage_media']),
+ T('stage_options','content','Answer choices for one stage. is_correct is never sent to the browser early.',[['id','uuid',''],['stage_id','uuid','→ case_stages'],['position','int','unique per stage'],['label','text',''],['is_correct','bool','hidden from learners by RLS'],['match_key','text','for ordering / matching'],['accepted_answers','text[]','synonyms for free text']],['case_stages','attempt_answers']),
+ T('case_references','content','References per case, orderable, with a verified flag that gates publishing.',[['id','uuid',''],['case_id','uuid','→ cases'],['position','int',''],['title, authors, source','text',''],['year, doi, url, pages','',''],['ref_type','text','book | journal | website | guideline'],['verified','bool','must be true to publish']],['cases']),
+ T('media_assets','content','Uploaded files in Supabase Storage, with type and licence info.',[['id','uuid',''],['storage_path','text','private bucket'],['media_type','text','image | xray | ecg | histology | audio | video | pdf …'],['alt_text, caption, credit, license','text',''],['bytes, mime','','size and type limits enforced']],['stage_media']),
+ T('stage_media','content','Attaches media to stages.',[['stage_id','uuid','→ case_stages'],['media_id','uuid','→ media_assets'],['position','int','']],['case_stages','media_assets']),
+ T('case_versions','gov','A frozen copy of the full case each time it is published.',[['id','uuid',''],['case_id','uuid','→ cases'],['version','int','unique per case'],['snapshot','jsonb','stages, options, references'],['published_by','uuid','→ profiles'],['published_at','timestamptz','']],['cases','attempts']),
+ T('case_reviews','gov','Reviewer decisions and comments.',[['id','uuid',''],['case_id','uuid','→ cases'],['reviewer_id','uuid','→ profiles'],['decision','text','approved | changes_requested'],['comments','text','']],['cases']),
+ T('audit_logs','gov','Insert-only history of important actions.',[['id','uuid',''],['actor_id','uuid','→ profiles'],['action','text','case.created | answer.changed | case.published …'],['entity, entity_id','text / uuid',''],['diff','jsonb','before / after'],['created_at','timestamptz','']],[]),
+ T('attempts','game','One play-through. The server owns lives, stage and status.',[['id','uuid',''],['user_id','uuid','→ profiles (guest = anonymous auth user)'],['case_version_id','uuid','→ case_versions'],['status','text','IN_PROGRESS | COMPLETED_SUCCESS | COMPLETED_FAILED | ABANDONED'],['current_stage','int',''],['lives_remaining','int',''],['score','int',''],['is_preview','bool','excluded from stats'],['started_at, completed_at','timestamptz','']],['attempt_answers','case_versions','profiles']),
+ T('attempt_answers','game','Every answer given. Powers wrong-answer analytics.',[['id','uuid',''],['attempt_id','uuid','→ attempts'],['seq','int','unique per attempt (blocks double submit)'],['stage_id','uuid','→ case_stages'],['option_ids / free_text','uuid[] / text',''],['is_correct','bool',''],['lives_before, lives_after','int',''],['answered_at','timestamptz','']],['attempts','stage_options']),
+ T('user_case_progress','game','Best result per user per case, for fast dashboards.',[['user_id, case_id','uuid','primary key'],['best_score','int',''],['solved','bool',''],['attempts_count','int',''],['last_played_at','timestamptz','']],['profiles','cases']),
+ T('case_saves','eng','Bookmarks and favourites.',[['user_id, case_id, kind','','primary key; kind = bookmark | favorite']],['profiles','cases']),
+ T('daily_challenges','eng','Which case is the case of the day.',[['challenge_date','date','unique'],['case_id','uuid','→ cases'],['selected_by','uuid','manual now, scheduler later']],['cases']),
+ T('achievements','eng','Achievement definitions, data-driven.',[['id','uuid',''],['code','text','unique, e.g. FIRST_DIAGNOSIS'],['name, description','text',''],['rule','jsonb','e.g. {"solved_count": 10}']],['user_achievements']),
+ T('user_achievements','eng','Who earned what, and when.',[['user_id, achievement_id','uuid','primary key'],['earned_at','timestamptz','']],['profiles','achievements']),
+ T('scoring_rules','eng','Central, editable scoring numbers. No magic numbers in code.',[['id','uuid',''],['base_score','int','1000'],['difficulty_multipliers','jsonb','{"EASY":1,"INTERMEDIATE":1.25,"HARD":1.5}'],['clue_weight, life_weight','numeric','0.5, 0.5'],['daily_bonus, streak_bonus','int',''],['active_from','timestamptz','']],[])
+];
+let curTable='cases';
+function renderDB(){
+  $('#dbGroups').innerHTML=Object.entries(GROUPS).map(([k,[label,color]])=>{
+    const ts=TABLES.filter(t=>t.g===k);
+    return `<div class="db-group"><div class="db-group-h"><h3>${label}</h3><span class="muted" style="font-size:13px">${ts.length} table${ts.length>1?'s':''}</span></div><div class="db-tables">${ts.map(t=>`<button class="tbl" data-tbl="${t.name}" aria-pressed="${t.name===curTable}"><i style="background:${color}"></i>${t.name}</button>`).join('')}</div></div>`;
+  }).join('');
+  const t=TABLES.find(x=>x.name===curTable), [gl,gc]=GROUPS[t.g];
+  $('#dbDetail').innerHTML=`<div class="mk-row"><span class="badge"><i style="width:8px;height:8px;border-radius:2px;background:${gc};display:block"></i>${gl}</span></div><h3>${t.name}</h3><p class="muted" style="font-size:14px">${esc(t.purpose)}</p>
+    <div class="tbl-wrap"><table class="cols"><tbody>${t.cols.map(c=>`<tr><td>${esc(c[0])}</td><td>${esc(c[1])}</td><td>${esc(c[2])}</td></tr>`).join('')}<tr><td>created_at, updated_at</td><td>timestamptz</td><td>on every table</td></tr></tbody></table></div>
+    ${t.links.length?`<div><div class="eyebrow" style="margin-bottom:6px">Linked tables</div><div class="db-tables">${t.links.map(l=>`<button class="tbl" data-tbl="${l}">${l}</button>`).join('')}</div></div>`:''}`;
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-tbl]');if(b){curTable=b.dataset.tbl;renderDB()}});
+const ROLES=['SUPER_ADMIN','ADMIN','EDITOR','REVIEWER','LEARNER'];
+const PERMS=[['Play published cases',[1,1,1,1,1]],['See draft cases',[1,1,1,1,0]],['Create and edit drafts',[1,1,1,0,0]],['Submit for review',[1,1,1,0,0]],['Approve a review',[1,1,0,1,0]],['Publish / unpublish',[1,1,0,0,0]],['Archive cases',[1,1,0,0,0]],['Manage domains, categories, tags',[1,1,0,0,0]],['View analytics',[1,1,0,1,0]],['Manage users and roles',[1,1,0,0,0]],['Grant SUPER_ADMIN',[1,0,0,0,0]]];
+$('#matrix').innerHTML=`<thead><tr><th>Action</th>${ROLES.map(r=>`<th>${r}</th>`).join('')}</tr></thead><tbody>${PERMS.map(([a,v])=>`<tr><td>${a}</td>${v.map(x=>x?`<td class="yes" aria-label="allowed">✓</td>`:`<td class="no" aria-label="not allowed">—</td>`).join('')}</tr>`).join('')}</tbody>`;
+
+/* ---------- hero phone ---------- */
+$('#heroPhone').innerHTML=`<div class="pd-stage" style="min-height:auto;background:transparent;padding:0">${playerMock(2)}</div>`;
+
+/* ---------- init ---------- */
+renderRail(); renderPhase(); renderDB(); renderBuilder();
+loadCase(ENGINE_CASES[0]);
+const start=(location.hash||'').slice(1);
+if(['overview','phases','engine','builder','database','report'].includes(start)) openTab(start); else placeInd();
+})();
+</script>
+</body>
+</html>
