@@ -1,0 +1,56 @@
+import type { EngineErrorCode } from "@/lib/engine/errors";
+
+/**
+ * Errors a learner can see. Messages are plain language and never contain database details.
+ */
+export const SERVICE_ERRORS = {
+  INVALID_REQUEST: { status: 400, message: "The request was not valid." },
+  UNAUTHORIZED: { status: 401, message: "Your session has expired. Open the case again to continue." },
+  FORBIDDEN: { status: 403, message: "You do not have permission to do that." },
+  CASE_UNAVAILABLE: { status: 404, message: "This case is not available." },
+  ATTEMPT_NOT_FOUND: { status: 404, message: "We could not find that attempt." },
+  ATTEMPT_NOT_STARTED: { status: 409, message: "Start the case before answering." },
+  ATTEMPT_COMPLETED: { status: 409, message: "This case is already finished." },
+  STALE_STATE: { status: 409, message: "Your answer was already received. Showing the latest state." },
+  INVALID_STAGE: { status: 409, message: "That answer was for a different clue. Showing the current clue." },
+  NO_LIVES_REMAINING: { status: 409, message: "No lives remain for this attempt." },
+  UNSUPPORTED_MEDIA_TYPE: { status: 415, message: "Requests must be sent as JSON." },
+  INVALID_ANSWER: { status: 422, message: "That answer option is not available for this clue." },
+  INTERNAL: { status: 500, message: "Something went wrong on our side. Please try again." },
+} as const;
+
+export type ServiceErrorCode = keyof typeof SERVICE_ERRORS;
+
+export class ServiceError extends Error {
+  readonly code: ServiceErrorCode;
+  readonly status: number;
+
+  constructor(code: ServiceErrorCode, detail?: string) {
+    super(detail ?? SERVICE_ERRORS[code].message);
+    this.name = "ServiceError";
+    this.code = code;
+    this.status = SERVICE_ERRORS[code].status;
+  }
+
+  /** The body sent to the browser: code + safe message, never the internal detail. */
+  toJSON() {
+    return { error: { code: this.code, message: SERVICE_ERRORS[this.code].message } };
+  }
+}
+
+const ENGINE_TO_SERVICE: Record<EngineErrorCode, ServiceErrorCode> = {
+  ATTEMPT_NOT_STARTED: "ATTEMPT_NOT_STARTED",
+  ATTEMPT_COMPLETED: "ATTEMPT_COMPLETED",
+  STALE_STATE: "STALE_STATE",
+  STAGE_MISMATCH: "INVALID_STAGE",
+  OPTION_NOT_FOUND: "INVALID_ANSWER",
+  OPTION_NOT_IN_STAGE: "INVALID_ANSWER",
+  OPTION_ALREADY_TRIED: "INVALID_ANSWER",
+  NO_LIVES_REMAINING: "NO_LIVES_REMAINING",
+  IDEMPOTENCY_KEY_REUSED: "INVALID_REQUEST",
+  CASE_VERSION_MISMATCH: "INTERNAL",
+};
+
+export function serviceErrorFromEngine(code: EngineErrorCode, detail: string): ServiceError {
+  return new ServiceError(ENGINE_TO_SERVICE[code], detail);
+}

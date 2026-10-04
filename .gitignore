@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# next.js / build output
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# testing
+coverage/
+test-results/
+playwright-report/
+
+# environment: never commit real secrets
+.env
+.env.*
+!.env.example
+
+# supabase local state
+supabase/.branches/
+supabase/.temp/
+
+# os / editor
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# vercel
+.vercel/

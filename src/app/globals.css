@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/*
+ * WiseCases design tokens. Restrained clinical palette:
+ * Wise Blue for actions and focus, Dark Navy for text and structure,
+ * Wise Red for lives and wrong answers, Teal for correct answers.
+ * Dark mode is planned (Milestone 10); components only use these tokens so it can be added centrally.
+ */
+@theme {
+  --color-wise-blue: #244a9b;
+  --color-wise-blue-hover: #1c3c80;
+  --color-wise-red: #d7264e;
+  --color-navy: #132a5c;
+  --color-teal: #018080;
+
+  --color-canvas: #f5f7fb;
+  --color-surface: #ffffff;
+  --color-line: #dbe2ee;
+  --color-line-strong: #b9c4d8;
+  --color-ink: #132a5c;
+  --color-ink-muted: #46546f;
+  --color-ink-subtle: #5f6c86;
+
+  --color-blue-soft: #e8eef9;
+  --color-teal-soft: #e0f1f1;
+  --color-red-soft: #fbe9ee;
+  --color-amber-soft: #fff4d6;
+  --color-amber-ink: #6b4a00;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-wise-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
