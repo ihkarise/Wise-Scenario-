@@ -8,6 +8,7 @@ import { LifeIndicator } from "@/components/ui/life-indicator";
 import { StageCard } from "@/components/ui/stage-card";
 import type { CaseResultView } from "@/lib/engine/view";
 import { cn } from "@/lib/utils/cn";
+import { ReasoningDebrief } from "./reasoning-debrief";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -128,11 +129,12 @@ export function ResultPanel({ result, onPlayAgain, starting }: { result: CaseRes
             <Section title="Clues you did not reach">
               <div className="grid gap-2">
                 {result.unseenClues.map((c) => (
-                  <StageCard key={c.stageId} order={c.order} title={c.title} content={c.content} />
+                  <StageCard key={c.stageId} order={c.order} title={c.title} content={c.content} investigations={c.investigations} />
                 ))}
               </div>
             </Section>
           )}
+          {result.reasoning && <ReasoningDebrief reasoning={result.reasoning} />}
           <Section title="References">
             {result.references.length === 0 ? (
               <p className="text-sm text-ink-muted">No references added yet.</p>

@@ -62,6 +62,7 @@ async function main() {
           console.log("No account with that email. Sign up in the app first, then run this again.");
           process.exitCode = 1;
         } else {
+          if (r.profileCreated) console.log("This account had no WiseCases profile (it was created before the migrations). Created it, with the LEARNER role.");
           console.log(`${r.status}: roles are now ${r.roles?.join(", ")}`);
         }
         break;

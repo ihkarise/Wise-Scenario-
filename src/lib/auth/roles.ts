@@ -11,6 +11,8 @@ export const PERMISSIONS = [
   "admin:access",
   "analytics:view",
   "user:manage",
+  /** Add categories (also enforced by the database: SUPER_ADMIN and ADMIN only). */
+  "taxonomy:manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -21,7 +23,7 @@ export type Permission = (typeof PERMISSIONS)[number];
  */
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   SUPER_ADMIN: PERMISSIONS,
-  ADMIN: ["case:play", "case:read_draft", "case:edit", "case:submit_review", "case:review", "admin:access", "analytics:view", "user:manage"],
+  ADMIN: ["case:play", "case:read_draft", "case:edit", "case:submit_review", "case:review", "admin:access", "analytics:view", "user:manage", "taxonomy:manage"],
   EDITOR: ["case:play", "case:read_draft", "case:edit", "case:submit_review", "admin:access"],
   REVIEWER: ["case:play", "case:read_draft", "case:review", "admin:access", "analytics:view"],
   LEARNER: ["case:play"],

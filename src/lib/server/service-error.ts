@@ -21,6 +21,10 @@ export const SERVICE_ERRORS = {
   SLUG_LOCKED: { status: 409, message: "The web address cannot be changed after a case has been published." },
   EDIT_CONFLICT: { status: 409, message: "This case was changed in another tab or by someone else. Reload to see the latest version before saving." },
   NOT_READY: { status: 422, message: "The case is not ready yet." },
+  CASE_ID_TAKEN: { status: 409, message: "Another case already uses this Case ID. Choose a different Case ID." },
+  DUPLICATE_CONFIRMATION_REQUIRED: { status: 409, message: "This case looks like one that already exists. Review the possible duplicates before importing." },
+  INVALID_CASE_FILE: { status: 422, message: "The case file has problems. Fix them and try again." },
+  DRAFT_INCOMPLETE: { status: 422, message: "Some required fields are empty. Fill them in before saving." },
   INVALID_TRANSITION: { status: 409, message: "That action is not available for this case right now." },
   INTERNAL: { status: 500, message: "Something went wrong on our side. Please try again." },
 } as const;

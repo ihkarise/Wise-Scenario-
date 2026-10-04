@@ -1,0 +1,896 @@
+{
+  "_notes": [
+    "Starter terminology list for the Case Manager diagnosis autocomplete (authors only).",
+    "It contains condition names, common abbreviations and grouping labels only: no clinical claims.",
+    "It should be reviewed by the medical author. Diagnoses and differentials written in cases are added automatically."
+  ],
+  "conditions": [
+    {
+      "name": "Autoimmune hepatitis",
+      "aliases": [
+        "AIH"
+      ],
+      "keywords": [
+        "liver",
+        "autoimmune"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Alcohol-related liver disease",
+      "aliases": [
+        "ALD",
+        "ArLD",
+        "Alcoholic liver disease"
+      ],
+      "keywords": [
+        "liver",
+        "alcohol"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Alcohol-related hepatitis",
+      "aliases": [
+        "Alcoholic hepatitis"
+      ],
+      "keywords": [
+        "liver",
+        "alcohol"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Decompensated cirrhosis",
+      "aliases": [
+        "Decompensated liver cirrhosis",
+        "Decompensated chronic liver disease"
+      ],
+      "keywords": [
+        "liver"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Liver cirrhosis",
+      "aliases": [
+        "Cirrhosis"
+      ],
+      "keywords": [
+        "liver"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Metabolic dysfunction-associated steatotic liver disease",
+      "aliases": [
+        "MASLD",
+        "NAFLD",
+        "Non-alcoholic fatty liver disease",
+        "Fatty liver disease"
+      ],
+      "keywords": [
+        "liver"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Primary biliary cholangitis",
+      "aliases": [
+        "PBC",
+        "Primary biliary cirrhosis"
+      ],
+      "keywords": [
+        "liver",
+        "autoimmune",
+        "bile duct"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Primary sclerosing cholangitis",
+      "aliases": [
+        "PSC"
+      ],
+      "keywords": [
+        "liver",
+        "bile duct"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Wilson disease",
+      "aliases": [
+        "Wilson's disease",
+        "Hepatolenticular degeneration"
+      ],
+      "keywords": [
+        "liver",
+        "copper"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Hereditary haemochromatosis",
+      "aliases": [
+        "Hereditary hemochromatosis",
+        "Haemochromatosis",
+        "Hemochromatosis",
+        "HH"
+      ],
+      "keywords": [
+        "liver",
+        "iron"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Alpha-1 antitrypsin deficiency",
+      "aliases": [
+        "A1AT deficiency",
+        "AATD"
+      ],
+      "keywords": [
+        "liver",
+        "lung"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Hepatitis A",
+      "aliases": [
+        "HAV infection",
+        "Acute hepatitis A"
+      ],
+      "keywords": [
+        "liver",
+        "viral"
+      ],
+      "specialty": "Hepatology",
+      "category": "Viral hepatitis"
+    },
+    {
+      "name": "Hepatitis B",
+      "aliases": [
+        "HBV infection"
+      ],
+      "keywords": [
+        "liver",
+        "viral"
+      ],
+      "specialty": "Hepatology",
+      "category": "Viral hepatitis"
+    },
+    {
+      "name": "Hepatitis C",
+      "aliases": [
+        "HCV infection"
+      ],
+      "keywords": [
+        "liver",
+        "viral"
+      ],
+      "specialty": "Hepatology",
+      "category": "Viral hepatitis"
+    },
+    {
+      "name": "Hepatitis E",
+      "aliases": [
+        "HEV infection"
+      ],
+      "keywords": [
+        "liver",
+        "viral"
+      ],
+      "specialty": "Hepatology",
+      "category": "Viral hepatitis"
+    },
+    {
+      "name": "Hepatic encephalopathy",
+      "aliases": [
+        "HE",
+        "Portosystemic encephalopathy"
+      ],
+      "keywords": [
+        "liver",
+        "brain"
+      ],
+      "specialty": "Hepatology",
+      "category": "Complications of cirrhosis"
+    },
+    {
+      "name": "Spontaneous bacterial peritonitis",
+      "aliases": [
+        "SBP"
+      ],
+      "keywords": [
+        "liver",
+        "ascites",
+        "infection"
+      ],
+      "specialty": "Hepatology",
+      "category": "Complications of cirrhosis"
+    },
+    {
+      "name": "Hepatorenal syndrome",
+      "aliases": [
+        "HRS"
+      ],
+      "keywords": [
+        "liver",
+        "kidney"
+      ],
+      "specialty": "Hepatology",
+      "category": "Complications of cirrhosis"
+    },
+    {
+      "name": "Oesophageal variceal haemorrhage",
+      "aliases": [
+        "Variceal bleed",
+        "Esophageal variceal hemorrhage",
+        "Bleeding oesophageal varices"
+      ],
+      "keywords": [
+        "liver",
+        "bleeding"
+      ],
+      "specialty": "Hepatology",
+      "category": "Complications of cirrhosis"
+    },
+    {
+      "name": "Hepatocellular carcinoma",
+      "aliases": [
+        "HCC",
+        "Liver cancer"
+      ],
+      "keywords": [
+        "liver",
+        "cancer"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver tumours"
+    },
+    {
+      "name": "Budd-Chiari syndrome",
+      "aliases": [
+        "Hepatic vein thrombosis"
+      ],
+      "keywords": [
+        "liver",
+        "thrombosis"
+      ],
+      "specialty": "Hepatology",
+      "category": "Vascular liver disease"
+    },
+    {
+      "name": "Drug-induced liver injury",
+      "aliases": [
+        "DILI"
+      ],
+      "keywords": [
+        "liver",
+        "drug"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Acute liver failure",
+      "aliases": [
+        "ALF",
+        "Fulminant hepatic failure"
+      ],
+      "keywords": [
+        "liver"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Paracetamol overdose",
+      "aliases": [
+        "Acetaminophen overdose",
+        "Paracetamol poisoning"
+      ],
+      "keywords": [
+        "liver",
+        "poisoning"
+      ],
+      "specialty": "Emergency Medicine",
+      "category": "Poisoning"
+    },
+    {
+      "name": "Gilbert syndrome",
+      "aliases": [
+        "Gilbert's syndrome"
+      ],
+      "keywords": [
+        "liver",
+        "bilirubin"
+      ],
+      "specialty": "Hepatology",
+      "category": "Liver disease"
+    },
+    {
+      "name": "Acute cholangitis",
+      "aliases": [
+        "Ascending cholangitis"
+      ],
+      "keywords": [
+        "bile duct",
+        "infection"
+      ],
+      "specialty": "Gastroenterology",
+      "category": "Biliary disease"
+    },
+    {
+      "name": "Acute cholecystitis",
+      "aliases": [],
+      "keywords": [
+        "gallbladder"
+      ],
+      "specialty": "General Surgery",
+      "category": "Biliary disease"
+    },
+    {
+      "name": "Choledocholithiasis",
+      "aliases": [
+        "Common bile duct stones",
+        "CBD stones"
+      ],
+      "keywords": [
+        "bile duct",
+        "gallstones"
+      ],
+      "specialty": "Gastroenterology",
+      "category": "Biliary disease"
+    },
+    {
+      "name": "Acute pancreatitis",
+      "aliases": [],
+      "keywords": [
+        "pancreas"
+      ],
+      "specialty": "Gastroenterology",
+      "category": "Pancreatic disease"
+    },
+    {
+      "name": "Acute appendicitis",
+      "aliases": [
+        "Appendicitis"
+      ],
+      "keywords": [
+        "abdomen"
+      ],
+      "specialty": "General Surgery",
+      "category": "Acute abdomen"
+    },
+    {
+      "name": "Small bowel obstruction",
+      "aliases": [
+        "SBO"
+      ],
+      "keywords": [
+        "abdomen",
+        "bowel"
+      ],
+      "specialty": "General Surgery",
+      "category": "Acute abdomen"
+    },
+    {
+      "name": "Perforated peptic ulcer",
+      "aliases": [
+        "Peptic ulcer perforation"
+      ],
+      "keywords": [
+        "abdomen",
+        "stomach"
+      ],
+      "specialty": "General Surgery",
+      "category": "Acute abdomen"
+    },
+    {
+      "name": "Ectopic pregnancy",
+      "aliases": [],
+      "keywords": [
+        "abdomen",
+        "pregnancy"
+      ],
+      "specialty": "Obstetrics and Gynaecology",
+      "category": "Early pregnancy"
+    },
+    {
+      "name": "ST-elevation myocardial infarction",
+      "aliases": [
+        "STEMI"
+      ],
+      "keywords": [
+        "heart",
+        "chest pain"
+      ],
+      "specialty": "Cardiology",
+      "category": "Acute coronary syndrome"
+    },
+    {
+      "name": "Inferior wall ST-elevation myocardial infarction",
+      "aliases": [
+        "Inferior STEMI",
+        "Inferior wall MI",
+        "Inferior myocardial infarction"
+      ],
+      "keywords": [
+        "heart",
+        "chest pain"
+      ],
+      "specialty": "Cardiology",
+      "category": "Acute coronary syndrome"
+    },
+    {
+      "name": "Anterior wall ST-elevation myocardial infarction",
+      "aliases": [
+        "Anterior STEMI",
+        "Anterior wall MI"
+      ],
+      "keywords": [
+        "heart",
+        "chest pain"
+      ],
+      "specialty": "Cardiology",
+      "category": "Acute coronary syndrome"
+    },
+    {
+      "name": "Non-ST-elevation myocardial infarction",
+      "aliases": [
+        "NSTEMI"
+      ],
+      "keywords": [
+        "heart",
+        "chest pain"
+      ],
+      "specialty": "Cardiology",
+      "category": "Acute coronary syndrome"
+    },
+    {
+      "name": "Unstable angina",
+      "aliases": [],
+      "keywords": [
+        "heart",
+        "chest pain"
+      ],
+      "specialty": "Cardiology",
+      "category": "Acute coronary syndrome"
+    },
+    {
+      "name": "Stable angina",
+      "aliases": [],
+      "keywords": [
+        "heart",
+        "chest pain"
+      ],
+      "specialty": "Cardiology",
+      "category": "Coronary artery disease"
+    },
+    {
+      "name": "Acute coronary syndrome",
+      "aliases": [
+        "ACS"
+      ],
+      "keywords": [
+        "heart",
+        "chest pain"
+      ],
+      "specialty": "Cardiology",
+      "category": "Acute coronary syndrome"
+    },
+    {
+      "name": "Aortic dissection",
+      "aliases": [],
+      "keywords": [
+        "aorta",
+        "chest pain"
+      ],
+      "specialty": "Cardiology",
+      "category": "Vascular disease"
+    },
+    {
+      "name": "Acute pericarditis",
+      "aliases": [
+        "Pericarditis"
+      ],
+      "keywords": [
+        "heart",
+        "chest pain"
+      ],
+      "specialty": "Cardiology",
+      "category": "Pericardial disease"
+    },
+    {
+      "name": "Cardiac tamponade",
+      "aliases": [
+        "Pericardial tamponade"
+      ],
+      "keywords": [
+        "heart"
+      ],
+      "specialty": "Cardiology",
+      "category": "Pericardial disease"
+    },
+    {
+      "name": "Atrial fibrillation",
+      "aliases": [
+        "AF"
+      ],
+      "keywords": [
+        "heart",
+        "arrhythmia"
+      ],
+      "specialty": "Cardiology",
+      "category": "Arrhythmia"
+    },
+    {
+      "name": "Heart failure",
+      "aliases": [
+        "HF",
+        "Congestive cardiac failure",
+        "CCF"
+      ],
+      "keywords": [
+        "heart"
+      ],
+      "specialty": "Cardiology",
+      "category": "Heart failure"
+    },
+    {
+      "name": "Infective endocarditis",
+      "aliases": [
+        "IE"
+      ],
+      "keywords": [
+        "heart",
+        "infection"
+      ],
+      "specialty": "Cardiology",
+      "category": "Infection"
+    },
+    {
+      "name": "Pulmonary embolism",
+      "aliases": [
+        "PE"
+      ],
+      "keywords": [
+        "lung",
+        "thrombosis",
+        "chest pain"
+      ],
+      "specialty": "Respiratory Medicine",
+      "category": "Pulmonary vascular disease"
+    },
+    {
+      "name": "Deep vein thrombosis",
+      "aliases": [
+        "DVT"
+      ],
+      "keywords": [
+        "leg",
+        "thrombosis"
+      ],
+      "specialty": "Cardiology",
+      "category": "Venous thromboembolism"
+    },
+    {
+      "name": "Tension pneumothorax",
+      "aliases": [],
+      "keywords": [
+        "lung",
+        "chest"
+      ],
+      "specialty": "Respiratory Medicine",
+      "category": "Pleural disease"
+    },
+    {
+      "name": "Primary spontaneous pneumothorax",
+      "aliases": [
+        "Spontaneous pneumothorax"
+      ],
+      "keywords": [
+        "lung",
+        "chest"
+      ],
+      "specialty": "Respiratory Medicine",
+      "category": "Pleural disease"
+    },
+    {
+      "name": "Community-acquired pneumonia",
+      "aliases": [
+        "CAP",
+        "Pneumonia"
+      ],
+      "keywords": [
+        "lung",
+        "infection"
+      ],
+      "specialty": "Respiratory Medicine",
+      "category": "Respiratory infection"
+    },
+    {
+      "name": "Acute asthma",
+      "aliases": [
+        "Asthma attack",
+        "Acute severe asthma"
+      ],
+      "keywords": [
+        "lung"
+      ],
+      "specialty": "Respiratory Medicine",
+      "category": "Airways disease"
+    },
+    {
+      "name": "Acute exacerbation of COPD",
+      "aliases": [
+        "AECOPD",
+        "COPD exacerbation",
+        "Chronic obstructive pulmonary disease exacerbation"
+      ],
+      "keywords": [
+        "lung"
+      ],
+      "specialty": "Respiratory Medicine",
+      "category": "Airways disease"
+    },
+    {
+      "name": "Pulmonary tuberculosis",
+      "aliases": [
+        "TB",
+        "Tuberculosis"
+      ],
+      "keywords": [
+        "lung",
+        "infection"
+      ],
+      "specialty": "Infectious Diseases",
+      "category": "Respiratory infection"
+    },
+    {
+      "name": "Acute respiratory distress syndrome",
+      "aliases": [
+        "ARDS"
+      ],
+      "keywords": [
+        "lung"
+      ],
+      "specialty": "Respiratory Medicine",
+      "category": "Critical care"
+    },
+    {
+      "name": "Diabetic ketoacidosis",
+      "aliases": [
+        "DKA"
+      ],
+      "keywords": [
+        "diabetes"
+      ],
+      "specialty": "Endocrinology",
+      "category": "Diabetes emergencies"
+    },
+    {
+      "name": "Hyperosmolar hyperglycaemic state",
+      "aliases": [
+        "HHS",
+        "Hyperosmolar hyperglycemic state"
+      ],
+      "keywords": [
+        "diabetes"
+      ],
+      "specialty": "Endocrinology",
+      "category": "Diabetes emergencies"
+    },
+    {
+      "name": "Hashimoto thyroiditis",
+      "aliases": [
+        "Hashimoto's thyroiditis",
+        "Chronic autoimmune thyroiditis"
+      ],
+      "keywords": [
+        "thyroid",
+        "autoimmune"
+      ],
+      "specialty": "Endocrinology",
+      "category": "Thyroid disease"
+    },
+    {
+      "name": "Primary hypothyroidism",
+      "aliases": [
+        "Hypothyroidism"
+      ],
+      "keywords": [
+        "thyroid"
+      ],
+      "specialty": "Endocrinology",
+      "category": "Thyroid disease"
+    },
+    {
+      "name": "Graves disease",
+      "aliases": [
+        "Graves' disease"
+      ],
+      "keywords": [
+        "thyroid",
+        "autoimmune"
+      ],
+      "specialty": "Endocrinology",
+      "category": "Thyroid disease"
+    },
+    {
+      "name": "Thyroid storm",
+      "aliases": [
+        "Thyrotoxic crisis"
+      ],
+      "keywords": [
+        "thyroid"
+      ],
+      "specialty": "Endocrinology",
+      "category": "Thyroid disease"
+    },
+    {
+      "name": "Primary adrenal insufficiency",
+      "aliases": [
+        "Addison disease",
+        "Addison's disease"
+      ],
+      "keywords": [
+        "adrenal"
+      ],
+      "specialty": "Endocrinology",
+      "category": "Adrenal disease"
+    },
+    {
+      "name": "Tinea corporis",
+      "aliases": [
+        "Ringworm"
+      ],
+      "keywords": [
+        "skin",
+        "fungal"
+      ],
+      "specialty": "Dermatology",
+      "category": "Skin infection"
+    },
+    {
+      "name": "Granuloma annulare",
+      "aliases": [],
+      "keywords": [
+        "skin"
+      ],
+      "specialty": "Dermatology",
+      "category": "Inflammatory skin disease"
+    },
+    {
+      "name": "Psoriasis",
+      "aliases": [
+        "Plaque psoriasis"
+      ],
+      "keywords": [
+        "skin"
+      ],
+      "specialty": "Dermatology",
+      "category": "Inflammatory skin disease"
+    },
+    {
+      "name": "Nummular eczema",
+      "aliases": [
+        "Discoid eczema"
+      ],
+      "keywords": [
+        "skin"
+      ],
+      "specialty": "Dermatology",
+      "category": "Eczema"
+    },
+    {
+      "name": "Ulnar nerve entrapment at the elbow",
+      "aliases": [
+        "Cubital tunnel syndrome",
+        "Ulnar neuropathy at the elbow"
+      ],
+      "keywords": [
+        "nerve",
+        "hand"
+      ],
+      "specialty": "Neurology",
+      "category": "Peripheral nerve disorders"
+    },
+    {
+      "name": "Carpal tunnel syndrome",
+      "aliases": [
+        "CTS"
+      ],
+      "keywords": [
+        "nerve",
+        "hand"
+      ],
+      "specialty": "Neurology",
+      "category": "Peripheral nerve disorders"
+    },
+    {
+      "name": "Subarachnoid haemorrhage",
+      "aliases": [
+        "SAH",
+        "Subarachnoid hemorrhage"
+      ],
+      "keywords": [
+        "brain",
+        "headache",
+        "bleeding"
+      ],
+      "specialty": "Neurology",
+      "category": "Stroke"
+    },
+    {
+      "name": "Ischaemic stroke",
+      "aliases": [
+        "Ischemic stroke",
+        "Cerebral infarction"
+      ],
+      "keywords": [
+        "brain"
+      ],
+      "specialty": "Neurology",
+      "category": "Stroke"
+    },
+    {
+      "name": "Bacterial meningitis",
+      "aliases": [
+        "Meningitis"
+      ],
+      "keywords": [
+        "brain",
+        "infection"
+      ],
+      "specialty": "Infectious Diseases",
+      "category": "Central nervous system infection"
+    },
+    {
+      "name": "Acute kidney injury",
+      "aliases": [
+        "AKI"
+      ],
+      "keywords": [
+        "kidney"
+      ],
+      "specialty": "Nephrology",
+      "category": "Kidney disease"
+    },
+    {
+      "name": "Sepsis",
+      "aliases": [],
+      "keywords": [
+        "infection"
+      ],
+      "specialty": "Infectious Diseases",
+      "category": "Sepsis"
+    },
+    {
+      "name": "Iron deficiency anaemia",
+      "aliases": [
+        "IDA",
+        "Iron deficiency anemia"
+      ],
+      "keywords": [
+        "blood"
+      ],
+      "specialty": "Haematology",
+      "category": "Anaemia"
+    }
+  ]
+}

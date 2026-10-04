@@ -1,3 +1,4 @@
+import { matchesAny } from "@/lib/matching/text";
 import { currentStage, isAnswerRevealed, isCompleted, orderedStages, triedOptionIds } from "./engine";
 import type {
   AnswerRecord,
@@ -9,6 +10,8 @@ import type {
   CompletionReason,
   Difficulty,
   Differential,
+  DifferentialDetail,
+  Investigation,
   StageMedia,
 } from "./types";
 
@@ -30,6 +33,8 @@ export type VisibleClue = {
   title: string;
   content: string;
   media: StageMedia[];
+  /** Present only when the author supplied results for this stage. */
+  investigations?: Investigation[];
 };
 
 export type CurrentStageView = VisibleClue & {
@@ -64,6 +69,39 @@ export type PublicReference = {
   isPlaceholder: boolean;
 };
 
+/** Feedback for one of the learner's own wrong answers, when the author wrote a specific explanation. */
+export type WrongAnswerFeedback = {
+  optionLabel: string;
+  explanation: string;
+  missedClues: string[];
+  betterDirection: string | null;
+};
+
+export type StageReview = {
+  order: number;
+  title: string;
+  explanation: string | null;
+  investigations: Investigation[];
+  crossReference: string | null;
+};
+
+/**
+ * Extra reasoning written in the Case Manager. Null unless the answer is revealed AND the author wrote
+ * something, so cases without these fields look exactly as before.
+ */
+export type ReasoningView = {
+  clinicalSummary: string | null;
+  diagnosticReasoning: string | null;
+  investigationSummary: string | null;
+  clinicalInsight: string | null;
+  whereReasoningCanGoWrong: string | null;
+  detailedExplanation: string | null;
+  finalReasoning: string | null;
+  differentialDetails: DifferentialDetail[];
+  stageReview: StageReview[];
+  yourWrongAnswers: WrongAnswerFeedback[];
+};
+
 export type CaseResultView = CaseResult & {
   correctAnswer: string | null;
   finalExplanation: string | null;
@@ -76,6 +114,7 @@ export type CaseResultView = CaseResult & {
   unseenClues: VisibleClue[];
   /** Share text that never contains the answer. */
   shareText: string;
+  reasoning: ReasoningView | null;
 };
 
 export type PlayerCaseInfo = {
@@ -114,13 +153,7 @@ export function toPlayerView(caseDef: CaseDefinition, attempt: CaseAttempt): Pla
   const stage = currentStage(caseDef, attempt);
   const completed = isCompleted(attempt);
   const reached = stages.slice(0, attempt.currentStageIndex + 1);
-  const toClue = (s: (typeof stages)[number]): VisibleClue => ({
-    stageId: s.id,
-    order: s.order,
-    title: s.title,
-    content: s.content,
-    media: s.media,
-  });
+  const toClue = clueOf;
 
   const earlier = reached.slice(0, -1);
   const clues = completed || stage.showPreviousClues ? earlier.map(toClue) : [];
@@ -160,6 +193,12 @@ export function toPlayerView(caseDef: CaseDefinition, attempt: CaseAttempt): Pla
     lastAnswer: lastAnswerView(caseDef, attempt),
     result: completed ? resultView(caseDef, attempt) : null,
   };
+}
+
+function clueOf(s: CaseDefinition["stages"][number]): VisibleClue {
+  const clue: VisibleClue = { stageId: s.id, order: s.order, title: s.title, content: s.content, media: s.media };
+  if (s.investigations && s.investigations.length > 0) clue.investigations = s.investigations;
+  return clue;
 }
 
 function findOptionLabel(caseDef: CaseDefinition, optionId: string): string {
@@ -235,17 +274,66 @@ function resultView(caseDef: CaseDefinition, attempt: CaseAttempt): CaseResultVi
         }))
       : [],
     history,
-    unseenClues: revealed
-      ? stages.slice(attempt.currentStageIndex + 1).map((s) => ({
-          stageId: s.id,
-          order: s.order,
-          title: s.title,
-          content: s.content,
-          media: s.media,
-        }))
-      : [],
+    unseenClues: revealed ? stages.slice(attempt.currentStageIndex + 1).map(clueOf) : [],
     shareText: shareText(caseDef, attempt, stages.length),
+    reasoning: revealed ? reasoningView(caseDef, attempt) : null,
   };
+}
+
+/** Author-written reasoning, or null if the case has none (older cases). Called only after reveal. */
+function reasoningView(caseDef: CaseDefinition, attempt: CaseAttempt): ReasoningView | null {
+  const t = caseDef.teaching;
+  const r = t.reasoning ?? {};
+  const details = t.differentialDetails ?? [];
+  const stageReview: StageReview[] = orderedStages(caseDef)
+    .filter((s) => s.explanation || (s.investigations?.length ?? 0) > 0 || s.crossReference)
+    .map((s) => ({
+      order: s.order,
+      title: s.title,
+      explanation: s.explanation ?? null,
+      investigations: s.investigations ?? [],
+      crossReference: s.crossReference ?? null,
+    }));
+
+  // A specific explanation is used when one exists for the learner's choice; otherwise the general
+  // explanation sections above remain the feedback, exactly as before.
+  const seen = new Set<string>();
+  const yourWrongAnswers: WrongAnswerFeedback[] = [];
+  for (const a of attempt.answers) {
+    if (a.isCorrect || seen.has(a.optionId)) continue;
+    seen.add(a.optionId);
+    const label = findOptionLabel(caseDef, a.optionId);
+    const specific = (t.wrongAnswerExplanations ?? []).find((w) => matchesAny(label, [w.condition, ...w.aliases]));
+    if (specific) {
+      yourWrongAnswers.push({
+        optionLabel: label,
+        explanation: specific.explanation,
+        missedClues: specific.missedClues,
+        betterDirection: specific.betterDirection ?? null,
+      });
+      continue;
+    }
+    const differential = details.find((d) => d.whyRejected && matchesAny(label, [d.name, ...d.aliases]));
+    if (differential?.whyRejected) {
+      yourWrongAnswers.push({ optionLabel: label, explanation: differential.whyRejected, missedClues: [], betterDirection: null });
+    }
+  }
+
+  const view: ReasoningView = {
+    clinicalSummary: r.clinicalSummary ?? null,
+    diagnosticReasoning: r.diagnosticReasoning ?? null,
+    investigationSummary: r.investigationSummary ?? null,
+    clinicalInsight: r.clinicalInsight ?? null,
+    whereReasoningCanGoWrong: r.whereReasoningCanGoWrong ?? null,
+    detailedExplanation: r.detailedExplanation ?? null,
+    finalReasoning: r.finalReasoning ?? null,
+    differentialDetails: details,
+    stageReview,
+    yourWrongAnswers,
+  };
+  const empty =
+    Object.values(r).every((v) => !v) && details.length === 0 && stageReview.length === 0 && yourWrongAnswers.length === 0;
+  return empty ? null : view;
 }
 
 export function shareText(caseDef: CaseDefinition, attempt: CaseAttempt, stageCount: number): string {
