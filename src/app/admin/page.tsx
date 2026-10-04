@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
-import { EmptyState } from "@/components/ui/state-views";
-import { actorFromGuestCookie, can, GUEST_COOKIE } from "@/lib/auth/actor";
+import { EmptyState, ErrorState } from "@/components/ui/state-views";
+import { isStaff } from "@/lib/auth/actor";
+import { getRequestActor } from "@/lib/server/request-actor";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
 /**
- * `src/proxy.ts` already answers 403 for anyone without admin access. This second server-side check
- * means the page stays protected even if the proxy matcher is changed by mistake.
- * Milestone 1 has no signed-in users, so nobody reaches the placeholder below.
+ * Signed-out visitors never reach this page (src/proxy.ts redirects them). Signed-in non-staff are
+ * refused here, on the server, using roles loaded from the database.
+ * The Case Builder is built after the Supabase foundation is verified.
  */
 export default async function AdminPage() {
-  const actor = actorFromGuestCookie((await cookies()).get(GUEST_COOKIE)?.value);
-  if (!can(actor, "admin:access")) notFound();
-  return <EmptyState title="Admin panel" message="The Case Builder arrives in Milestone 3." />;
+  const actor = await getRequestActor();
+  if (!isStaff(actor)) {
+    return (
+      <div className="mx-auto max-w-xl">
+        <ErrorState title="Administrators only" message="Your account does not have access to the admin area." />
+      </div>
+    );
+  }
+  return <EmptyState title="Admin panel" message="The Case Builder arrives after the Supabase foundation is verified." />;
 }

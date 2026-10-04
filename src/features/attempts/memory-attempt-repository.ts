@@ -1,9 +1,9 @@
 import type { CaseAttempt } from "@/lib/engine/types";
-import type { AttemptRepository } from "./attempt-repository";
+import type { AttemptHistoryItem, AttemptRepository } from "./attempt-repository";
 
 /**
  * In-memory attempts for local development and tests. Data is lost when the server restarts and is
- * not shared between serverless instances, so this is never used in production.
+ * not shared between serverless instances, so it is used only by unit tests.
  * Each method does its check-and-write without awaiting in between, so it is atomic in Node's event loop.
  */
 export class MemoryAttemptRepository implements AttemptRepository {
@@ -32,6 +32,23 @@ export class MemoryAttemptRepository implements AttemptRepository {
     if (!stored || stored.revision !== expectedRevision) return false;
     this.rows.set(attempt.id, structuredClone(attempt));
     return true;
+  }
+
+  async listHistory(ownerKey: string, limit: number): Promise<AttemptHistoryItem[]> {
+    return [...this.rows.values()]
+      .filter((r) => r.ownerId === ownerKey)
+      .sort((a, b) => (b.startedAt ?? "").localeCompare(a.startedAt ?? ""))
+      .slice(0, limit)
+      .map((r) => ({
+        attemptId: r.id,
+        caseSlug: r.caseId,
+        caseTitle: r.caseId,
+        status: r.status,
+        score: r.score,
+        livesRemaining: r.livesRemaining,
+        startedAt: r.startedAt,
+        completedAt: r.completedAt,
+      }));
   }
 
   private active(ownerId: string, caseId: string): CaseAttempt | undefined {

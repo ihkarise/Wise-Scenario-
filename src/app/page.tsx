@@ -3,6 +3,9 @@ import { buttonClasses } from "@/components/ui/button";
 import { CaseCard } from "@/features/cases/components/case-card";
 import { getContainer } from "@/lib/server/container";
 
+/** Case content comes from the database at request time. */
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const { items } = await getContainer().cases.listPublished({ limit: 3 });
   return (

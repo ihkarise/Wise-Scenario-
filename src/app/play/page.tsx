@@ -9,6 +9,9 @@ export const metadata: Metadata = { title: "Cases" };
 
 const PAGE_SIZE = 24;
 
+/** Case content comes from the database at request time. */
+export const dynamic = "force-dynamic";
+
 export default async function PlayPage({ searchParams }: { searchParams: Promise<{ after?: string }> }) {
   const { after } = await searchParams;
   const cursor = after && /^\d{1,9}$/.test(after) ? after : null;

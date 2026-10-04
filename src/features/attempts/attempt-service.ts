@@ -4,7 +4,8 @@ import type { Actor } from "@/lib/auth/actor";
 import { can } from "@/lib/auth/actor";
 import { ServiceError, serviceErrorFromEngine } from "@/lib/server/service-error";
 import type { CaseRepository } from "@/features/cases/case-repository";
-import type { AttemptRepository } from "./attempt-repository";
+import type { AttemptHistoryItem, AttemptRepository } from "./attempt-repository";
+import { ownerKeyFor } from "./owner";
 
 export type AttemptServiceDeps = {
   cases: CaseRepository;
@@ -28,10 +29,10 @@ export class AttemptService {
     this.requirePlay(actor);
     const caseDef = await this.findPublishedBySlug(caseSlug);
 
-    const active = await this.deps.attempts.findActive(actor.id, caseDef.id);
+    const active = await this.deps.attempts.findActive(ownerKeyFor(actor), caseDef.id);
     if (active) return toPlayerView(await this.loadVersion(active), active);
 
-    const fresh = beginAttempt(createAttempt(caseDef, { attemptId: this.deps.newId(), ownerId: actor.id }), this.deps.clock());
+    const fresh = beginAttempt(createAttempt(caseDef, { attemptId: this.deps.newId(), ownerId: ownerKeyFor(actor) }), this.deps.clock());
     // Two rapid "Start" clicks resolve to the same attempt.
     const stored = await this.deps.attempts.insertIfNoActive(fresh);
     return toPlayerView(stored.id === fresh.id ? caseDef : await this.loadVersion(stored), stored);
@@ -42,8 +43,13 @@ export class AttemptService {
     if (!actor || !can(actor, "case:play")) return null;
     const caseDef = await this.deps.cases.findBySlug(caseSlug);
     if (!caseDef || caseDef.publicationStatus !== "PUBLISHED") return null;
-    const active = await this.deps.attempts.findActive(actor.id, caseDef.id);
+    const active = await this.deps.attempts.findActive(ownerKeyFor(actor), caseDef.id);
     return active ? toPlayerView(await this.loadVersion(active), active) : null;
+  }
+
+  /** The signed-in learner's (or guest's) recent attempts. */
+  async history(actor: Actor, limit = 20): Promise<AttemptHistoryItem[]> {
+    return this.deps.attempts.listHistory(ownerKeyFor(actor), Math.min(Math.max(limit, 1), 100));
   }
 
   async getView(actor: Actor, attemptId: string): Promise<PlayerView> {
@@ -90,7 +96,7 @@ export class AttemptService {
   /** Someone else's attempt is reported as "not found" so attempt IDs cannot be probed. */
   private async loadOwnedAttempt(actor: Actor, attemptId: string): Promise<CaseAttempt> {
     const attempt = await this.deps.attempts.findById(attemptId);
-    if (!attempt || attempt.ownerId !== actor.id) throw new ServiceError("ATTEMPT_NOT_FOUND");
+    if (!attempt || attempt.ownerId !== ownerKeyFor(actor)) throw new ServiceError("ATTEMPT_NOT_FOUND");
     return attempt;
   }
 

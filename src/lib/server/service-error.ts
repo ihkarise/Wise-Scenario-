@@ -16,6 +16,12 @@ export const SERVICE_ERRORS = {
   NO_LIVES_REMAINING: { status: 409, message: "No lives remain for this attempt." },
   UNSUPPORTED_MEDIA_TYPE: { status: 415, message: "Requests must be sent as JSON." },
   INVALID_ANSWER: { status: 422, message: "That answer option is not available for this clue." },
+  CASE_NOT_FOUND: { status: 404, message: "We could not find that case." },
+  SLUG_TAKEN: { status: 409, message: "That web address is already used by another case. Choose a different one." },
+  SLUG_LOCKED: { status: 409, message: "The web address cannot be changed after a case has been published." },
+  EDIT_CONFLICT: { status: 409, message: "This case was changed in another tab or by someone else. Reload to see the latest version before saving." },
+  NOT_READY: { status: 422, message: "The case is not ready yet." },
+  INVALID_TRANSITION: { status: 409, message: "That action is not available for this case right now." },
   INTERNAL: { status: 500, message: "Something went wrong on our side. Please try again." },
 } as const;
 
@@ -25,16 +31,22 @@ export class ServiceError extends Error {
   readonly code: ServiceErrorCode;
   readonly status: number;
 
-  constructor(code: ServiceErrorCode, detail?: string) {
+  /** Plain-language items safe to show (e.g. "Clue 3 has no correct answer."). */
+  readonly issues: string[];
+
+  constructor(code: ServiceErrorCode, detail?: string, issues: string[] = []) {
     super(detail ?? SERVICE_ERRORS[code].message);
     this.name = "ServiceError";
     this.code = code;
     this.status = SERVICE_ERRORS[code].status;
+    this.issues = issues;
   }
 
-  /** The body sent to the browser: code + safe message, never the internal detail. */
+  /** The body sent to the browser: code + safe message (+ author-facing issues), never the internal detail. */
   toJSON() {
-    return { error: { code: this.code, message: SERVICE_ERRORS[this.code].message } };
+    const error: { code: ServiceErrorCode; message: string; issues?: string[] } = { code: this.code, message: SERVICE_ERRORS[this.code].message };
+    if (this.issues.length > 0) error.issues = this.issues;
+    return { error };
   }
 }
 

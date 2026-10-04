@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import { GUEST_COOKIE } from "@/lib/auth/actor";
+import { encodeGuestCookie, GUEST_COOKIE } from "@/lib/auth/guest-cookie";
 import type { PlayerView } from "@/lib/engine";
 import { createMemoryContainer } from "@/lib/server/container";
 import { fixtureCase, NOW } from "../../../../tests/support/fixtures";
@@ -10,8 +10,10 @@ const ORIGIN = "http://localhost:3000";
 const published = fixtureCase({ stages: 4, maxLives: 3 });
 const draft = { ...fixtureCase({ id: "draft-case" }), publicationStatus: "DRAFT" as const };
 
+const SECRET = "handler-test-secret-at-least-32-characters";
+
 function setup() {
-  const container = createMemoryContainer({ cases: [published, draft], clock: () => NOW });
+  const container = createMemoryContainer({ cases: [published, draft], clock: () => NOW, sessionSecret: SECRET });
   return createAttemptHandlers(() => container);
 }
 
@@ -44,7 +46,8 @@ describe("attempt HTTP handlers", () => {
     const { res, cookie, view } = await start(handlers);
     expect(res.status).toBe(201);
     expect(res.headers.get("cache-control")).toBe("no-store");
-    expect(cookie).toMatch(/^[0-9a-f-]{36}$/);
+    // A random guest ID plus an HMAC signature.
+    expect(cookie).toMatch(/^[0-9a-f-]{36}\.[A-Za-z0-9_-]{43}$/);
     expect(res.headers.get("set-cookie")).toMatch(/HttpOnly/i);
     expect(view.current?.order).toBe(1);
     const json = JSON.stringify(view);
@@ -99,7 +102,7 @@ describe("attempt HTTP handlers", () => {
   it("another learner's cookie cannot read or answer the attempt", async () => {
     const handlers = setup();
     const { view } = await start(handlers);
-    const otherCookie = "33333333-3333-4333-8333-333333333333";
+    const otherCookie = encodeGuestCookie("33333333-3333-4333-8333-333333333333", SECRET);
     expect((await handlers.get(req(`/api/attempts/${view.attemptId}`, { cookie: otherCookie }), view.attemptId)).status).toBe(404);
     const res = await handlers.submit(
       req(`/api/attempts/${view.attemptId}/answers`, {
@@ -109,6 +112,16 @@ describe("attempt HTTP handlers", () => {
       view.attemptId,
     );
     expect(res.status).toBe(404);
+  });
+
+  it("rejects an unsigned or forged guest cookie as no session", async () => {
+    const handlers = setup();
+    const { cookie, view } = await start(handlers);
+    const guestId = cookie.split(".")[0]!;
+    for (const forged of [guestId, `${guestId}.not-a-real-signature`]) {
+      const res = await handlers.get(req(`/api/attempts/${view.attemptId}`, { cookie: forged }), view.attemptId);
+      expect(res.status).toBe(401);
+    }
   });
 
   it("requires a session, JSON, a same-origin request and a well-formed attempt ID", async () => {

@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { toCaseSummary } from "@/features/cases/case-repository";
 import { CasePlayer } from "@/features/player/components/case-player";
-import { actorFromGuestCookie, GUEST_COOKIE } from "@/lib/auth/actor";
 import { slugSchema } from "@/lib/schemas/ids";
 import { getContainer } from "@/lib/server/container";
+import { getRequestActor } from "@/lib/server/request-actor";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -29,7 +28,7 @@ export default async function CasePage({ params }: Params) {
   const caseDef = await loadPublished((await params).slug);
   if (!caseDef) notFound();
 
-  const actor = actorFromGuestCookie((await cookies()).get(GUEST_COOKIE)?.value);
+  const actor = await getRequestActor();
   const initialView = await getContainer().attemptService.getActiveView(actor, caseDef.slug);
 
   return (

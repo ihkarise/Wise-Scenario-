@@ -24,7 +24,9 @@ trap cleanup EXIT
 
 PSQL=("${RUN[@]}" "$PGBIN/psql" -h "$WORK" -U postgres -d postgres -X -q -v ON_ERROR_STOP=1)
 "${PSQL[@]}" -f "$ROOT/supabase/tests/support/00_supabase_shim.sql"
-for migration in "$ROOT"/supabase/migrations/*.sql; do
+# Approved migrations, then proposed ones (supabase/proposed/, not yet applied to any project).
+for migration in "$ROOT"/supabase/migrations/*.sql "$ROOT"/supabase/proposed/*.sql; do
+  [[ -f "$migration" ]] || continue
   echo "applying $(basename "$migration")"
   "${PSQL[@]}" -f "$migration"
 done
@@ -32,7 +34,16 @@ done
 "${PSQL[@]}" -f "$ROOT/supabase/seed.sql"
 "${PSQL[@]}" -f "$ROOT/supabase/tests/rls.test.sql"
 
-echo "checking rollback"
-"${PSQL[@]}" -f "$ROOT/supabase/rollback/20261004000100_m1_core_schema.down.sql"
-"${PSQL[@]}" -f "$ROOT/supabase/migrations/20261004000100_m1_core_schema.sql"
-echo "rollback and re-apply OK"
+echo "checking rollback (newest first) and re-apply"
+for down in $(ls "$ROOT"/supabase/rollback/*.down.sql | sort -r); do
+  echo "rolling back $(basename "$down")"
+  "${PSQL[@]}" -f "$down"
+done
+for migration in "$ROOT"/supabase/migrations/*.sql "$ROOT"/supabase/proposed/*.sql; do
+  [[ -f "$migration" ]] || continue
+  "${PSQL[@]}" -f "$migration"
+done
+"${PSQL[@]}" -f "$ROOT/supabase/tests/support/99_service_role_grants.sql"
+"${PSQL[@]}" -f "$ROOT/supabase/seed.sql"
+"${PSQL[@]}" -f "$ROOT/supabase/tests/rls.test.sql"
+echo "rollback, re-apply and re-test OK"

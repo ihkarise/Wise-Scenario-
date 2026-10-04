@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { actorFromGuestCookie, can, guestActor, type Actor } from "./actor";
+import { can, guestActor, type Actor } from "./actor";
+import { decodeGuestCookie, encodeGuestCookie } from "./guest-cookie";
 
 const user = (roles: Actor["roles"]): Actor => ({ id: "u", kind: "user", roles });
 
@@ -27,11 +28,22 @@ describe("authorization", () => {
     expect(can(user(["EDITOR"]), "case:review")).toBe(false);
   });
 
-  it("no actor means no permissions, and malformed guest cookies are ignored", () => {
+  it("no actor means no permissions", () => {
     expect(can(null, "case:play")).toBe(false);
-    expect(actorFromGuestCookie("admin")).toBeNull();
-    expect(actorFromGuestCookie("' OR 1=1 --")).toBeNull();
-    expect(actorFromGuestCookie(undefined)).toBeNull();
-    expect(actorFromGuestCookie("11111111-1111-4111-8111-111111111111")?.roles).toEqual(["LEARNER"]);
+    expect(can(undefined, "admin:access")).toBe(false);
+  });
+
+  it("guest cookies must carry a valid server signature", () => {
+    const secret = "unit-test-secret-at-least-32-characters";
+    const id = "11111111-1111-4111-8111-111111111111";
+    const cookie = encodeGuestCookie(id, secret);
+    expect(decodeGuestCookie(cookie, secret)).toBe(id);
+    // Unsigned (Milestone 1 style), forged, tampered or wrong-secret cookies are all rejected.
+    expect(decodeGuestCookie(id, secret)).toBeNull();
+    expect(decodeGuestCookie(`${id}.forged`, secret)).toBeNull();
+    expect(decodeGuestCookie(cookie.replace("1111", "2222"), secret)).toBeNull();
+    expect(decodeGuestCookie(cookie, "another-secret-of-at-least-32-chars!!")).toBeNull();
+    expect(decodeGuestCookie("' OR 1=1 --", secret)).toBeNull();
+    expect(decodeGuestCookie(undefined, secret)).toBeNull();
   });
 });
