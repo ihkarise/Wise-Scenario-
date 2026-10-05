@@ -1,7 +1,7 @@
 import type { CaseDefinition, Difficulty, PublicationStatus, TerminalBehavior } from "@/lib/engine/types";
 import { asUser, pgCode, pgConstraint, PG, toIso, type Sql, type Tx } from "@/lib/db/client";
 import { parseCaseDefinition } from "@/lib/schemas/case";
-import { ServiceError } from "@/lib/server/service-error";
+import { isServiceError, ServiceError } from "@/lib/server/service-error";
 import type { Condition } from "@/features/case-manager/conditions";
 import type { ExistingCase } from "@/features/case-manager/duplicates";
 import type {
@@ -77,7 +77,7 @@ const SORT_SQL: Record<CaseListQuery["sort"], string> = {
 const likePattern = (q: string) => `%${q.replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
 
 function translate(error: unknown): never {
-  if (error instanceof ServiceError) throw error;
+  if (isServiceError(error)) throw error;
   const code = pgCode(error);
   if (code === PG.UNIQUE_VIOLATION && pgConstraint(error) === "cases_slug_key") throw new ServiceError("SLUG_TAKEN");
   if (code === PG.UNIQUE_VIOLATION) throw new ServiceError("INVALID_REQUEST", "Duplicate value", ["That name is already used."]);

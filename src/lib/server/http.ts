@@ -1,7 +1,7 @@
 import "server-only";
 import { NextResponse, type NextRequest } from "next/server";
 import { ZodError } from "zod";
-import { ServiceError } from "./service-error";
+import { isServiceError, ServiceError } from "./service-error";
 
 const MAX_BODY_BYTES = 8 * 1024;
 /** Case files and full drafts (authoring only). */
@@ -18,7 +18,7 @@ export function jsonError(error: ServiceError): NextResponse {
 
 /** Converts any thrown value into a safe response. Unknown errors are logged, never echoed. */
 export function toErrorResponse(error: unknown): NextResponse {
-  if (error instanceof ServiceError) return jsonError(error);
+  if (isServiceError(error)) return jsonError(error);
   if (error instanceof ZodError) return jsonError(new ServiceError("INVALID_REQUEST"));
   console.error("[wisecases] unexpected error", error);
   return jsonError(new ServiceError("INTERNAL"));

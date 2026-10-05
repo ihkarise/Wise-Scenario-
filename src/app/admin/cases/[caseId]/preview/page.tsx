@@ -6,7 +6,7 @@ import { loadOr404 } from "@/features/case-manager/load-case";
 import { PreviewPlayer } from "@/features/case-manager/components/preview-player";
 import { getContainer } from "@/lib/server/container";
 import { getRequestActor } from "@/lib/server/request-actor";
-import { ServiceError } from "@/lib/server/service-error";
+import { isServiceError } from "@/lib/server/service-error";
 
 export const metadata: Metadata = { title: "Preview" };
 
@@ -31,7 +31,7 @@ export default async function PreviewPage({ params }: Params) {
   try {
     snapshot = await loadOr404(caseId, (id) => admin.previewSnapshot(actor, id));
   } catch (e) {
-    if (e instanceof ServiceError && e.code === "NOT_READY") {
+    if (isServiceError(e) && e.code === "NOT_READY") {
       return (
         <div className="mx-auto grid max-w-2xl gap-4">
           <ErrorState title="This case cannot be previewed yet" message={e.issues.join(" ")} />

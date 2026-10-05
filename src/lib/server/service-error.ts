@@ -31,7 +31,16 @@ export const SERVICE_ERRORS = {
 
 export type ServiceErrorCode = keyof typeof SERVICE_ERRORS;
 
+/**
+ * Next.js bundles pages and route handlers separately, so this module (and the ServiceError class) can
+ * exist twice in one server. The shared container is created by whichever runs first, so an error thrown
+ * by a service may come from the other copy and fail `instanceof`. A global symbol is the same in every
+ * copy; always recognise service errors with `isServiceError`, never `instanceof ServiceError`.
+ */
+const SERVICE_ERROR_BRAND: unique symbol = Symbol.for("wisecases.ServiceError");
+
 export class ServiceError extends Error {
+  readonly [SERVICE_ERROR_BRAND] = true;
   readonly code: ServiceErrorCode;
   readonly status: number;
 
@@ -52,6 +61,13 @@ export class ServiceError extends Error {
     if (this.issues.length > 0) error.issues = this.issues;
     return { error };
   }
+}
+
+/** True for a ServiceError from any bundle copy of this module (see SERVICE_ERROR_BRAND). */
+export function isServiceError(error: unknown): error is ServiceError {
+  if (typeof error !== "object" || error === null) return false;
+  const e = error as { [SERVICE_ERROR_BRAND]?: unknown; code?: unknown };
+  return e[SERVICE_ERROR_BRAND] === true && typeof e.code === "string" && Object.hasOwn(SERVICE_ERRORS, e.code);
 }
 
 const ENGINE_TO_SERVICE: Record<EngineErrorCode, ServiceErrorCode> = {
